@@ -158,6 +158,24 @@
       </form>
     </dialog>
 
+    <dialog id="access-dialog" class="dialog">
+      <form method="dialog" id="access-form">
+        <h2>Board openen</h2>
+        <p class="muted">Vul het wachtwoord in om dit bord te openen.</p>
+        <label>
+          Wachtwoord
+          <input name="password" type="password" minlength="6" required />
+        </label>
+        <p id="access-status" class="muted"></p>
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn ghost">Annuleren</button>
+          <button id="access-open" value="confirm" class="btn primary">
+            Openen
+          </button>
+        </menu>
+      </form>
+    </dialog>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js" defer></script>
   </body>

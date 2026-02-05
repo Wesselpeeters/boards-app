@@ -30,6 +30,10 @@ const passwordDialog = document.getElementById("password-dialog");
 const passwordForm = document.getElementById("password-form");
 const passwordSaveBtn = document.getElementById("password-save");
 const passwordStatus = document.getElementById("password-status");
+const accessDialog = document.getElementById("access-dialog");
+const accessForm = document.getElementById("access-form");
+const accessOpenBtn = document.getElementById("access-open");
+const accessStatus = document.getElementById("access-status");
 
 const supabaseUrl = "https://okmhfegiaonqgfqykuzm.supabase.co";
 const supabaseKey =
@@ -459,6 +463,32 @@ async function openBoard(slug) {
   boardsStatus.textContent = "";
 }
 
+async function openBoardWithPassword(slug, password) {
+  if (!supabaseClient) {
+    accessStatus.textContent = "Supabase is niet geladen.";
+    return;
+  }
+  accessStatus.textContent = "Board openen...";
+  const { data, error } = await supabaseClient.rpc("get_board", {
+    board_slug: slug,
+    board_password: password
+  });
+  if (error) {
+    accessStatus.textContent = error.message;
+    return;
+  }
+  if (!data) {
+    accessStatus.textContent = "Board niet gevonden of wachtwoord onjuist.";
+    return;
+  }
+  currentBoard = { slug, mode: "public", password };
+  state = data;
+  render();
+  showBoardScreen();
+  accessStatus.textContent = "";
+  accessDialog.close();
+}
+
 function scheduleRemoteSave() {
   if (!currentBoard) return;
   if (!supabaseClient) return;
@@ -466,11 +496,21 @@ function scheduleRemoteSave() {
     window.clearTimeout(pendingSave);
   }
   pendingSave = window.setTimeout(async () => {
-    const { error } = await supabaseClient.rpc("save_board_owner", {
-      board_slug: currentBoard.slug,
-      board_title: state.title,
-      board_data: state
-    });
+    const { error } = await supabaseClient.rpc(
+      currentBoard.mode === "owner" ? "save_board_owner" : "save_board",
+      currentBoard.mode === "owner"
+        ? {
+            board_slug: currentBoard.slug,
+            board_title: state.title,
+            board_data: state
+          }
+        : {
+            board_slug: currentBoard.slug,
+            board_password: currentBoard.password,
+            board_title: state.title,
+            board_data: state
+          }
+    );
     if (error) {
       boardsStatus.textContent = "Opslaan mislukt: " + error.message;
     }
@@ -515,6 +555,16 @@ passwordSaveBtn.addEventListener("click", (event) => {
 passwordForm.addEventListener("submit", (event) => {
   event.preventDefault();
   updateBoardPassword();
+});
+
+accessOpenBtn.addEventListener("click", (event) => {
+  event.preventDefault();
+  handleAccessSubmit();
+});
+
+accessForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  handleAccessSubmit();
 });
 
 async function loadBoards() {
@@ -575,9 +625,30 @@ async function initAuth() {
   if (user) {
     showBoardsScreen();
     await loadBoards();
-  } else {
-    showLoginScreen();
+    return;
   }
+  const url = new URL(window.location.href);
+  const slug = url.searchParams.get("board");
+  if (slug) {
+    showLoginScreen();
+    accessForm.dataset.slug = slug;
+    accessStatus.textContent = "";
+    accessForm.reset();
+    accessDialog.showModal();
+    return;
+  }
+  showLoginScreen();
+}
+
+function handleAccessSubmit() {
+  const slug = accessForm.dataset.slug;
+  const formData = new FormData(accessForm);
+  const password = formData.get("password").toString().trim();
+  if (!slug || !password) {
+    accessStatus.textContent = "Vul het wachtwoord in.";
+    return;
+  }
+  openBoardWithPassword(slug, password);
 }
 
 async function updateBoardPassword() {
@@ -615,6 +686,7 @@ if (!supabaseClient) {
   boardPasswordBtn.disabled = true;
   backToBoardsBtn.disabled = true;
   passwordSaveBtn.disabled = true;
+  accessOpenBtn.disabled = true;
 }
 
 render();
