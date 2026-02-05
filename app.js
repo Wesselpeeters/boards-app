@@ -141,7 +141,8 @@ function render() {
   state.inbox.forEach((card) => {
     inbox.appendChild(renderTimelineCard(card, "inbox"));
   });
-  state.cards.forEach((card) => {
+  const sortedCards = sortCardsByDate(state.cards);
+  sortedCards.forEach((card) => {
     board.appendChild(renderTimelineCard(card, "timeline"));
   });
 
@@ -159,9 +160,7 @@ function render() {
     board.classList.remove("drag-over");
     if (!activeDrag) return;
     if (activeDrag.source === "inbox") {
-      moveFromInboxToTimeline(activeDrag.cardId, activeDrag.overCardId);
-    } else {
-      reorderCard(activeDrag.cardId, activeDrag.overCardId);
+      moveFromInboxToTimeline(activeDrag.cardId);
     }
   });
 
@@ -201,18 +200,13 @@ function renderTimelineCard(card, source) {
   const cardEl = wrapper.querySelector(".card");
   cardEl.addEventListener("dragstart", (event) => {
     cardEl.classList.add("dragging");
-    activeDrag = { cardId: card.id, overCardId: card.id, source };
+    activeDrag = { cardId: card.id, source };
     event.dataTransfer.effectAllowed = "move";
   });
 
   cardEl.addEventListener("dragend", () => {
     cardEl.classList.remove("dragging");
     activeDrag = null;
-  });
-
-  wrapper.addEventListener("dragenter", () => {
-    if (!activeDrag) return;
-    activeDrag.overCardId = card.id;
   });
 
   cardEl.addEventListener("click", () => {
@@ -222,31 +216,11 @@ function renderTimelineCard(card, source) {
   return wrapper;
 }
 
-function reorderCard(cardId, overCardId) {
-  if (!cardId || !overCardId || cardId === overCardId) return;
-  const fromIndex = state.cards.findIndex((card) => card.id === cardId);
-  const toIndex = state.cards.findIndex((card) => card.id === overCardId);
-  if (fromIndex === -1 || toIndex === -1) return;
-  const [card] = state.cards.splice(fromIndex, 1);
-  state.cards.splice(toIndex, 0, card);
-  saveState();
-  render();
-}
-
-function moveFromInboxToTimeline(cardId, overCardId) {
+function moveFromInboxToTimeline(cardId) {
   const fromIndex = state.inbox.findIndex((card) => card.id === cardId);
   if (fromIndex === -1) return;
   const [card] = state.inbox.splice(fromIndex, 1);
-  if (!overCardId) {
-    state.cards.push(card);
-  } else {
-    const toIndex = state.cards.findIndex((c) => c.id === overCardId);
-    if (toIndex === -1) {
-      state.cards.push(card);
-    } else {
-      state.cards.splice(toIndex, 0, card);
-    }
-  }
+  state.cards.push(card);
   saveState();
   render();
 }
@@ -275,6 +249,17 @@ function openCardDialog(card) {
     cardSubmitBtn.textContent = "Opslaan";
   }
   cardDialog.showModal();
+}
+
+function sortCardsByDate(cards) {
+  return [...cards].sort((a, b) => {
+    const timeA = new Date(a.date).getTime();
+    const timeB = new Date(b.date).getTime();
+    if (timeA === timeB) {
+      return (a.title || "").localeCompare(b.title || "");
+    }
+    return timeA - timeB;
+  });
 }
 
 function escapeHtml(value) {
