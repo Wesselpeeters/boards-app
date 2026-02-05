@@ -634,6 +634,13 @@ function showBoardScreen() {
   boardsScreen.classList.add("hidden");
   boardScreen.classList.remove("hidden");
   boardTopbar.classList.remove("hidden");
+  updateOwnerControls();
+}
+
+function updateOwnerControls() {
+  const isOwner = currentBoard?.mode === "owner";
+  boardPasswordBtn.classList.toggle("hidden", !isOwner);
+  backToBoardsBtn.classList.toggle("hidden", !isOwner);
 }
 
 function getBoardUrl() {
