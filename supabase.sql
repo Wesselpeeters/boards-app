@@ -1,4 +1,4 @@
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists public.boards (
   id uuid primary key default gen_random_uuid(),
@@ -56,7 +56,7 @@ create or replace function public.create_board(
 returns uuid
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   new_id uuid;
@@ -70,7 +70,7 @@ begin
     auth.uid(),
     board_title,
     board_slug,
-    crypt(board_password, gen_salt('bf')),
+    extensions.crypt(board_password, extensions.gen_salt('bf')),
     board_data
   )
   returning id into new_id;
@@ -86,7 +86,7 @@ create or replace function public.get_board(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   board_record public.boards;
@@ -94,7 +94,7 @@ begin
   select * into board_record
   from public.boards
   where slug = board_slug
-    and password_hash = crypt(board_password, password_hash);
+    and password_hash = extensions.crypt(board_password, password_hash);
 
   if not found then
     return null;
@@ -113,14 +113,84 @@ create or replace function public.save_board(
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   update public.boards
   set title = board_title,
       data = board_data
   where slug = board_slug
-    and password_hash = crypt(board_password, password_hash);
+    and password_hash = extensions.crypt(board_password, password_hash);
+
+  return found;
+end;
+$$;
+
+create or replace function public.list_boards()
+returns table (
+  id uuid,
+  title text,
+  slug text,
+  updated_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select id, title, slug, updated_at
+  from public.boards
+  where owner = auth.uid()
+  order by updated_at desc;
+$$;
+
+create or replace function public.get_board_owner(
+  board_slug text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  board_record public.boards;
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select * into board_record
+  from public.boards
+  where slug = board_slug
+    and owner = auth.uid();
+
+  if not found then
+    return null;
+  end if;
+
+  return board_record.data;
+end;
+$$;
+
+create or replace function public.save_board_owner(
+  board_slug text,
+  board_title text,
+  board_data jsonb
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  update public.boards
+  set title = board_title,
+      data = board_data
+  where slug = board_slug
+    and owner = auth.uid();
 
   return found;
 end;

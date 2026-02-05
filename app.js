@@ -12,9 +12,14 @@ const authForm = document.getElementById("auth-form");
 const signUpBtn = document.getElementById("sign-up");
 const signInBtn = document.getElementById("sign-in");
 const authStatus = document.getElementById("auth-status");
-const boardOpenForm = document.getElementById("board-open-form");
-const boardOpenBtn = document.getElementById("board-open");
-const boardOpenStatus = document.getElementById("board-open-status");
+const loginScreen = document.getElementById("login-screen");
+const boardsScreen = document.getElementById("boards-screen");
+const boardScreen = document.getElementById("board-screen");
+const boardsGrid = document.getElementById("boards-grid");
+const boardsStatus = document.getElementById("boards-status");
+const openCreateBoardBtn = document.getElementById("open-create-board");
+const logoutBtn = document.getElementById("logout");
+const createBoardDialog = document.getElementById("create-board-dialog");
 const boardCreateForm = document.getElementById("board-create-form");
 const boardCreateBtn = document.getElementById("board-create");
 const boardCreateStatus = document.getElementById("board-create-status");
@@ -352,7 +357,8 @@ async function handleAuth(action) {
     if (result.error) {
       authStatus.textContent = result.error.message;
     } else {
-      authStatus.textContent = "Gelukt. Check de console voor details.";
+      authStatus.textContent = "Gelukt.";
+      await initAuth();
     }
   } catch (error) {
     authStatus.textContent = "Er ging iets mis bij het inloggen.";
@@ -366,8 +372,8 @@ async function ensureSignedIn() {
   if (!supabaseClient) {
     return null;
   }
-  const { data } = await supabaseClient.auth.getUser();
-  return data.user;
+  const { data } = await supabaseClient.auth.getSession();
+  return data.session?.user ?? null;
 }
 
 function getInitialBoardData(title) {
@@ -415,47 +421,35 @@ async function createBoard() {
     return;
   }
 
-  boardCreateStatus.textContent = "Board gemaakt. Je kunt het nu openen.";
-  boardOpenForm.slug.value = slug;
+  boardCreateStatus.textContent = "Board gemaakt.";
+  createBoardDialog.close();
+  await loadBoards();
 }
 
-async function openBoard() {
+async function openBoard(slug) {
   if (!supabaseClient) {
-    boardOpenStatus.textContent = "Supabase is niet geladen.";
+    boardsStatus.textContent = "Supabase is niet geladen.";
     return;
   }
-  const formData = new FormData(boardOpenForm);
-  const slug = formData.get("slug").toString().trim();
-  const password = formData.get("password").toString().trim();
-  if (!slug || !password) {
-    boardOpenStatus.textContent = "Vul een slug en wachtwoord in.";
-    return;
-  }
-
-  boardOpenStatus.textContent = "Bezig...";
-  const { data, error } = await supabaseClient.rpc("get_board", {
-    board_slug: slug,
-    board_password: password
+  boardsStatus.textContent = "Board openen...";
+  const { data, error } = await supabaseClient.rpc("get_board_owner", {
+    board_slug: slug
   });
 
   if (error) {
-    boardOpenStatus.textContent = error.message;
+    boardsStatus.textContent = error.message;
     return;
   }
-
   if (!data) {
-    boardOpenStatus.textContent = "Board niet gevonden.";
+    boardsStatus.textContent = "Board niet gevonden.";
     return;
   }
 
-  currentBoard = { slug, password };
+  currentBoard = { slug, mode: "owner" };
   state = data;
-  saveState();
   render();
-  boardOpenStatus.textContent = "Board geopend.";
-  const url = new URL(window.location.href);
-  url.searchParams.set("board", slug);
-  window.history.replaceState({}, "", url);
+  showBoardScreen();
+  boardsStatus.textContent = "";
 }
 
 function scheduleRemoteSave() {
@@ -465,50 +459,106 @@ function scheduleRemoteSave() {
     window.clearTimeout(pendingSave);
   }
   pendingSave = window.setTimeout(async () => {
-    const { error } = await supabaseClient.rpc("save_board", {
+    const { error } = await supabaseClient.rpc("save_board_owner", {
       board_slug: currentBoard.slug,
-      board_password: currentBoard.password,
       board_title: state.title,
       board_data: state
     });
     if (error) {
-      boardOpenStatus.textContent = "Opslaan mislukt: " + error.message;
+      boardsStatus.textContent = "Opslaan mislukt: " + error.message;
     }
   }, 600);
 }
 
 boardCreateBtn.addEventListener("click", createBoard);
-boardOpenBtn.addEventListener("click", openBoard);
 boardCreateForm.addEventListener("submit", (event) => {
   event.preventDefault();
   createBoard();
 });
-boardOpenForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  openBoard();
+
+openCreateBoardBtn.addEventListener("click", () => {
+  boardCreateStatus.textContent = "";
+  boardCreateForm.reset();
+  createBoardDialog.showModal();
 });
 
-function prefillFromUrl() {
-  const url = new URL(window.location.href);
-  const slug = url.searchParams.get("board");
-  if (slug) {
-    boardOpenForm.slug.value = slug;
+logoutBtn.addEventListener("click", async () => {
+  if (!supabaseClient) return;
+  await supabaseClient.auth.signOut();
+  showLoginScreen();
+});
+
+async function loadBoards() {
+  if (!supabaseClient) return;
+  boardsStatus.textContent = "Boards laden...";
+  const { data, error } = await supabaseClient.rpc("list_boards");
+  if (error) {
+    boardsStatus.textContent = error.message;
+    return;
   }
+  boardsGrid.innerHTML = "";
+  const newCard = document.createElement("div");
+  newCard.className = "board-card new";
+  newCard.innerHTML = `
+    <span>+</span>
+    <p>Nieuw bord</p>
+  `;
+  newCard.addEventListener("click", () => openCreateBoardBtn.click());
+  boardsGrid.appendChild(newCard);
+
+  data.forEach((boardItem) => {
+    const card = document.createElement("div");
+    card.className = "board-card";
+    card.innerHTML = `
+      <h3>${escapeHtml(boardItem.title)}</h3>
+      <p>${escapeHtml(boardItem.slug)}</p>
+    `;
+    card.addEventListener("click", () => openBoard(boardItem.slug));
+    boardsGrid.appendChild(card);
+  });
+  boardsStatus.textContent = "";
 }
 
-prefillFromUrl();
+function showLoginScreen() {
+  loginScreen.classList.remove("hidden");
+  boardsScreen.classList.add("hidden");
+  boardScreen.classList.add("hidden");
+}
+
+function showBoardsScreen() {
+  loginScreen.classList.add("hidden");
+  boardsScreen.classList.remove("hidden");
+  boardScreen.classList.add("hidden");
+}
+
+function showBoardScreen() {
+  loginScreen.classList.add("hidden");
+  boardsScreen.classList.add("hidden");
+  boardScreen.classList.remove("hidden");
+}
+
+async function initAuth() {
+  if (!supabaseClient) return;
+  const user = await ensureSignedIn();
+  if (user) {
+    showBoardsScreen();
+    await loadBoards();
+  } else {
+    showLoginScreen();
+  }
+}
 
 if (!supabaseClient) {
   authStatus.textContent =
     "Supabase kon niet laden. Gebruik een lokale server i.p.v. file://.";
-  boardOpenStatus.textContent =
-    "Supabase is niet beschikbaar.";
   boardCreateStatus.textContent =
     "Supabase is niet beschikbaar.";
   signUpBtn.disabled = true;
   signInBtn.disabled = true;
-  boardOpenBtn.disabled = true;
   boardCreateBtn.disabled = true;
+  openCreateBoardBtn.disabled = true;
+  logoutBtn.disabled = true;
 }
 
 render();
+initAuth();

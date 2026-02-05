@@ -26,10 +26,10 @@
         </div>
       </header>
 
-      <section class="auth-panel">
+      <section id="login-screen" class="screen auth-panel">
         <div>
           <h2>Login</h2>
-          <p class="muted">Test de Supabase auth-flow met een account.</p>
+          <p class="muted">Log in met je masteraccount.</p>
         </div>
         <form id="auth-form" class="auth-form">
           <label>
@@ -48,53 +48,22 @@
         </form>
       </section>
 
-      <section class="board-panel">
-        <div>
-          <h2>Board toegang</h2>
-          <p class="muted">Open een bord met URL-slug en wachtwoord.</p>
-        </div>
-        <form id="board-open-form" class="board-form">
-          <label>
-            Board slug
-            <input name="slug" type="text" placeholder="mijn-bord" required />
-          </label>
-          <label>
-            Wachtwoord
-            <input name="password" type="password" required />
-          </label>
-          <div class="board-actions">
-            <button type="button" id="board-open" class="btn primary">Open bord</button>
+      <section id="boards-screen" class="screen boards-screen hidden">
+        <header class="boards-header">
+          <div>
+            <h2>Jouw borden</h2>
+            <p class="muted">Klik op een bord om te openen.</p>
           </div>
-          <p id="board-open-status" class="muted"></p>
-        </form>
+          <div class="boards-actions">
+            <button id="open-create-board" class="btn ghost">Nieuw bord</button>
+            <button id="logout" class="btn ghost">Uitloggen</button>
+          </div>
+        </header>
+        <div id="boards-grid" class="boards-grid"></div>
+        <p id="boards-status" class="muted"></p>
       </section>
 
-      <section class="board-panel">
-        <div>
-          <h2>Nieuw board (master)</h2>
-          <p class="muted">Maak een nieuw bord met unieke slug.</p>
-        </div>
-        <form id="board-create-form" class="board-form">
-          <label>
-            Titel
-            <input name="title" type="text" maxlength="60" required />
-          </label>
-          <label>
-            Board slug
-            <input name="slug" type="text" placeholder="mijn-bord" required />
-          </label>
-          <label>
-            Wachtwoord
-            <input name="password" type="password" minlength="6" required />
-          </label>
-          <div class="board-actions">
-            <button type="button" id="board-create" class="btn ghost">Board maken</button>
-          </div>
-          <p id="board-create-status" class="muted"></p>
-        </form>
-      </section>
-
-      <main>
+      <main id="board-screen" class="screen hidden">
         <div id="board" class="board" aria-label="Kanban board"></div>
       </main>
     </div>
@@ -143,6 +112,29 @@
         <div id="timeline" class="timeline"></div>
         <menu class="dialog-actions">
           <button value="confirm" class="btn primary">Sluiten</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="create-board-dialog" class="dialog">
+      <form method="dialog" id="board-create-form">
+        <h2>Nieuw board</h2>
+        <label>
+          Titel
+          <input name="title" type="text" maxlength="60" required />
+        </label>
+        <label>
+          Board slug
+          <input name="slug" type="text" placeholder="mijn-bord" required />
+        </label>
+        <label>
+          Wachtwoord
+          <input name="password" type="password" minlength="6" required />
+        </label>
+        <p id="board-create-status" class="muted"></p>
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn ghost">Annuleren</button>
+          <button id="board-create" value="confirm" class="btn primary">Board maken</button>
         </menu>
       </form>
     </dialog>
