@@ -641,6 +641,8 @@ function updateOwnerControls() {
   const isOwner = currentBoard?.mode === "owner";
   boardPasswordBtn.classList.toggle("hidden", !isOwner);
   backToBoardsBtn.classList.toggle("hidden", !isOwner);
+  copyLinkBtn.classList.toggle("hidden", !isOwner);
+  boardLinkEl.classList.toggle("hidden", !isOwner);
 }
 
 function getBoardUrl() {
