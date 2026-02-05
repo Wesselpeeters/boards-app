@@ -202,13 +202,6 @@ body {
   gap: 6px;
 }
 
-.board-link {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-  word-break: break-all;
-}
-
 .board-title {
   font-size: 2rem;
   font-weight: 700;

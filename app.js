@@ -6,7 +6,6 @@ const cardDialog = document.getElementById("card-dialog");
 const cardForm = document.getElementById("card-form");
 const boardTitleInput = document.getElementById("board-title");
 const boardTopbar = document.getElementById("board-topbar");
-const boardLinkEl = document.getElementById("board-link");
 const openTimelineBtn = document.getElementById("open-timeline");
 const timelineDialog = document.getElementById("timeline-dialog");
 const timelineContainer = document.getElementById("timeline");
@@ -127,7 +126,6 @@ function saveState() {
 function render() {
   board.innerHTML = "";
   boardTitleInput.value = state.title || "Kanban Bord";
-  updateBoardLink();
   state.columns.forEach((column) => {
     const columnEl = document.createElement("section");
     columnEl.className = "column";
@@ -560,7 +558,10 @@ copyLinkBtn.addEventListener("click", async () => {
       copyLinkBtn.textContent = "Kopieer link";
     }, 1500);
   } catch (error) {
-    boardLinkEl.textContent = url;
+    copyLinkBtn.textContent = "Kopiëren mislukt";
+    window.setTimeout(() => {
+      copyLinkBtn.textContent = "Kopieer link";
+    }, 1500);
   }
 });
 
@@ -642,7 +643,6 @@ function updateOwnerControls() {
   boardPasswordBtn.classList.toggle("hidden", !isOwner);
   backToBoardsBtn.classList.toggle("hidden", !isOwner);
   copyLinkBtn.classList.toggle("hidden", !isOwner);
-  boardLinkEl.classList.toggle("hidden", !isOwner);
 }
 
 function getBoardUrl() {
@@ -652,14 +652,6 @@ function getBoardUrl() {
   return url.toString();
 }
 
-function updateBoardLink() {
-  const url = getBoardUrl();
-  if (!url) {
-    boardLinkEl.textContent = "";
-    return;
-  }
-  boardLinkEl.textContent = url;
-}
 
 async function initAuth() {
   if (!supabaseClient) return;
