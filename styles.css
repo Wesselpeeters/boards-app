@@ -162,6 +162,7 @@ body {
   padding: 10px 12px;
   font-family: inherit;
   font-size: 0.95rem;
+}
 .auth-actions {
   grid-column: 1 / -1;
   display: flex;
