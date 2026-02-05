@@ -5,6 +5,7 @@ const columnForm = document.getElementById("column-form");
 const cardDialog = document.getElementById("card-dialog");
 const cardForm = document.getElementById("card-form");
 const boardTitleInput = document.getElementById("board-title");
+const boardTopbar = document.getElementById("board-topbar");
 const openTimelineBtn = document.getElementById("open-timeline");
 const timelineDialog = document.getElementById("timeline-dialog");
 const timelineContainer = document.getElementById("timeline");
@@ -23,6 +24,12 @@ const createBoardDialog = document.getElementById("create-board-dialog");
 const boardCreateForm = document.getElementById("board-create-form");
 const boardCreateBtn = document.getElementById("board-create");
 const boardCreateStatus = document.getElementById("board-create-status");
+const boardPasswordBtn = document.getElementById("board-password");
+const backToBoardsBtn = document.getElementById("back-to-boards");
+const passwordDialog = document.getElementById("password-dialog");
+const passwordForm = document.getElementById("password-form");
+const passwordSaveBtn = document.getElementById("password-save");
+const passwordStatus = document.getElementById("password-status");
 
 const supabaseUrl = "https://okmhfegiaonqgfqykuzm.supabase.co";
 const supabaseKey =
@@ -488,6 +495,28 @@ logoutBtn.addEventListener("click", async () => {
   showLoginScreen();
 });
 
+boardPasswordBtn.addEventListener("click", () => {
+  if (!currentBoard) return;
+  passwordStatus.textContent = "";
+  passwordForm.reset();
+  passwordDialog.showModal();
+});
+
+backToBoardsBtn.addEventListener("click", () => {
+  showBoardsScreen();
+  loadBoards();
+});
+
+passwordSaveBtn.addEventListener("click", (event) => {
+  event.preventDefault();
+  updateBoardPassword();
+});
+
+passwordForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  updateBoardPassword();
+});
+
 async function loadBoards() {
   if (!supabaseClient) return;
   boardsStatus.textContent = "Boards laden...";
@@ -523,18 +552,21 @@ function showLoginScreen() {
   loginScreen.classList.remove("hidden");
   boardsScreen.classList.add("hidden");
   boardScreen.classList.add("hidden");
+  boardTopbar.classList.add("hidden");
 }
 
 function showBoardsScreen() {
   loginScreen.classList.add("hidden");
   boardsScreen.classList.remove("hidden");
   boardScreen.classList.add("hidden");
+  boardTopbar.classList.add("hidden");
 }
 
 function showBoardScreen() {
   loginScreen.classList.add("hidden");
   boardsScreen.classList.add("hidden");
   boardScreen.classList.remove("hidden");
+  boardTopbar.classList.remove("hidden");
 }
 
 async function initAuth() {
@@ -548,6 +580,28 @@ async function initAuth() {
   }
 }
 
+async function updateBoardPassword() {
+  if (!supabaseClient) return;
+  if (!currentBoard) return;
+  const formData = new FormData(passwordForm);
+  const password = formData.get("password").toString().trim();
+  if (!password) {
+    passwordStatus.textContent = "Vul een wachtwoord in.";
+    return;
+  }
+  passwordStatus.textContent = "Opslaan...";
+  const { error } = await supabaseClient.rpc("set_board_password", {
+    board_slug: currentBoard.slug,
+    board_password: password
+  });
+  if (error) {
+    passwordStatus.textContent = error.message;
+    return;
+  }
+  passwordStatus.textContent = "Opgeslagen.";
+  passwordDialog.close();
+}
+
 if (!supabaseClient) {
   authStatus.textContent =
     "Supabase kon niet laden. Gebruik een lokale server i.p.v. file://.";
@@ -558,6 +612,9 @@ if (!supabaseClient) {
   boardCreateBtn.disabled = true;
   openCreateBoardBtn.disabled = true;
   logoutBtn.disabled = true;
+  boardPasswordBtn.disabled = true;
+  backToBoardsBtn.disabled = true;
+  passwordSaveBtn.disabled = true;
 }
 
 render();

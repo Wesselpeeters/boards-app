@@ -8,7 +8,7 @@
   </head>
   <body>
     <div class="app">
-      <header class="topbar">
+      <header id="board-topbar" class="topbar">
         <div class="title-group">
           <input
             id="board-title"
@@ -21,8 +21,10 @@
           <p>Sleep kaartjes, voeg kolommen toe en maak taken aan.</p>
         </div>
         <div class="topbar-actions">
+          <button id="board-password" class="btn ghost">Wachtwoord</button>
           <button id="add-column" class="btn primary">Kolom toevoegen</button>
           <button id="open-timeline" class="btn ghost">Tijdlijn</button>
+          <button id="back-to-boards" class="btn ghost">Terug</button>
         </div>
       </header>
 
@@ -135,6 +137,23 @@
         <menu class="dialog-actions">
           <button value="cancel" class="btn ghost">Annuleren</button>
           <button id="board-create" value="confirm" class="btn primary">Board maken</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="password-dialog" class="dialog">
+      <form method="dialog" id="password-form">
+        <h2>Wachtwoord instellen</h2>
+        <label>
+          Nieuw wachtwoord
+          <input name="password" type="password" minlength="6" required />
+        </label>
+        <p id="password-status" class="muted"></p>
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn ghost">Annuleren</button>
+          <button id="password-save" value="confirm" class="btn primary">
+            Opslaan
+          </button>
         </menu>
       </form>
     </dialog>

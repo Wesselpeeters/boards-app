@@ -195,3 +195,26 @@ begin
   return found;
 end;
 $$;
+
+create or replace function public.set_board_password(
+  board_slug text,
+  board_password text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  update public.boards
+  set password_hash = extensions.crypt(board_password, extensions.gen_salt('bf'))
+  where slug = board_slug
+    and owner = auth.uid();
+
+  return found;
+end;
+$$;
