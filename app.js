@@ -37,6 +37,20 @@ const accessForm = document.getElementById("access-form");
 const accessOpenBtn = document.getElementById("access-open");
 const accessStatus = document.getElementById("access-status");
 
+document.querySelectorAll(".dialog-cancel").forEach((button) => {
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    button.closest("dialog").close();
+  });
+});
+
+document.querySelectorAll(".dialog-close").forEach((button) => {
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    button.closest("dialog").close();
+  });
+});
+
 const supabaseUrl = "https://okmhfegiaonqgfqykuzm.supabase.co";
 const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rbWhmZWdpYW9ucWdmcXlrdXptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzkzMTcsImV4cCI6MjA4NTg1NTMxN30.TpugZBoaWNHwN7ekLMXWREQ6o6DcpK7SzGEAvkGSzps";
