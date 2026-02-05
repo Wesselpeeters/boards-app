@@ -65,6 +65,10 @@ body {
   display: none;
 }
 
+.hidden {
+  display: none;
+}
+
 .boards-screen {
   margin-top: 20px;
 }
