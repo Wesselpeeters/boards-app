@@ -22,24 +22,27 @@ const boardCreateStatus = document.getElementById("board-create-status");
 const supabaseUrl = "https://okmhfegiaonqgfqykuzm.supabase.co";
 const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rbWhmZWdpYW9ucWdmcXlrdXptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzkzMTcsImV4cCI6MjA4NTg1NTMxN30.TpugZBoaWNHwN7ekLMXWREQ6o6DcpK7SzGEAvkGSzps";
-const supabase = window.supabase
+const supabaseClient = window.supabase
   ? window.supabase.createClient(supabaseUrl, supabaseKey)
   : null;
 
 async function signUp(email, password) {
-  if (!supabase) {
+  if (!supabaseClient) {
     return { error: { message: "Supabase is niet geladen." } };
   }
-  const result = await supabase.auth.signUp({ email, password });
+  const result = await supabaseClient.auth.signUp({ email, password });
   console.log("signUp:", result);
   return result;
 }
 
 async function signIn(email, password) {
-  if (!supabase) {
+  if (!supabaseClient) {
     return { error: { message: "Supabase is niet geladen." } };
   }
-  const result = await supabase.auth.signInWithPassword({ email, password });
+  const result = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
   console.log("signIn:", result);
   return result;
 }
@@ -360,10 +363,10 @@ signUpBtn.addEventListener("click", () => handleAuth("signup"));
 signInBtn.addEventListener("click", () => handleAuth("signin"));
 
 async function ensureSignedIn() {
-  if (!supabase) {
+  if (!supabaseClient) {
     return null;
   }
-  const { data } = await supabase.auth.getUser();
+  const { data } = await supabaseClient.auth.getUser();
   return data.user;
 }
 
@@ -379,7 +382,7 @@ function getInitialBoardData(title) {
 }
 
 async function createBoard() {
-  if (!supabase) {
+  if (!supabaseClient) {
     boardCreateStatus.textContent = "Supabase is niet geladen.";
     return;
   }
@@ -400,7 +403,7 @@ async function createBoard() {
   }
 
   const boardData = getInitialBoardData(title);
-  const { error } = await supabase.rpc("create_board", {
+  const { error } = await supabaseClient.rpc("create_board", {
     board_title: title,
     board_slug: slug,
     board_password: password,
@@ -417,7 +420,7 @@ async function createBoard() {
 }
 
 async function openBoard() {
-  if (!supabase) {
+  if (!supabaseClient) {
     boardOpenStatus.textContent = "Supabase is niet geladen.";
     return;
   }
@@ -430,7 +433,7 @@ async function openBoard() {
   }
 
   boardOpenStatus.textContent = "Bezig...";
-  const { data, error } = await supabase.rpc("get_board", {
+  const { data, error } = await supabaseClient.rpc("get_board", {
     board_slug: slug,
     board_password: password
   });
@@ -457,12 +460,12 @@ async function openBoard() {
 
 function scheduleRemoteSave() {
   if (!currentBoard) return;
-  if (!supabase) return;
+  if (!supabaseClient) return;
   if (pendingSave) {
     window.clearTimeout(pendingSave);
   }
   pendingSave = window.setTimeout(async () => {
-    const { error } = await supabase.rpc("save_board", {
+    const { error } = await supabaseClient.rpc("save_board", {
       board_slug: currentBoard.slug,
       board_password: currentBoard.password,
       board_title: state.title,
@@ -495,7 +498,7 @@ function prefillFromUrl() {
 
 prefillFromUrl();
 
-if (!supabase) {
+if (!supabaseClient) {
   authStatus.textContent =
     "Supabase kon niet laden. Gebruik een lokale server i.p.v. file://.";
   boardOpenStatus.textContent =
