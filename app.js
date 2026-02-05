@@ -282,10 +282,12 @@ boardTitleInput.addEventListener("input", () => {
   saveState();
 });
 
-openTimelineBtn.addEventListener("click", () => {
-  renderTimeline();
-  timelineDialog.showModal();
-});
+if (openTimelineBtn) {
+  openTimelineBtn.addEventListener("click", () => {
+    renderTimeline();
+    timelineDialog.showModal();
+  });
+}
 
 async function handleAuth(action) {
   const formData = new FormData(authForm);
