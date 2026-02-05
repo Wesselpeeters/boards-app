@@ -2,11 +2,14 @@ const board = document.getElementById("board");
 const addCardBtn = document.getElementById("add-card");
 const cardDialog = document.getElementById("card-dialog");
 const cardForm = document.getElementById("card-form");
+const cardDialogTitle = document.getElementById("card-dialog-title");
+const cardSubmitBtn = document.getElementById("card-submit");
 const boardTitleInput = document.getElementById("board-title");
 const boardTopbar = document.getElementById("board-topbar");
 const openTimelineBtn = document.getElementById("open-timeline");
 const timelineDialog = document.getElementById("timeline-dialog");
 const timelineContainer = document.getElementById("timeline");
+const inbox = document.getElementById("inbox");
 const authForm = document.getElementById("auth-form");
 const signUpBtn = document.getElementById("sign-up");
 const signInBtn = document.getElementById("sign-in");
@@ -66,6 +69,7 @@ const STORAGE_KEY = "kanban-board-v2";
 
 const defaultState = {
   title: "Kanban Bord",
+  inbox: [],
   cards: [
     {
       id: createId(),
@@ -80,6 +84,7 @@ let state = loadState();
 let activeDrag = null;
 let currentBoard = null;
 let pendingSave = null;
+let editingCardId = null;
 
 function createId() {
   return `id-${Math.random().toString(36).slice(2, 9)}-${Date.now()}`;
@@ -99,7 +104,14 @@ function loadState() {
 }
 
 function migrateState(parsed) {
-  if (parsed.cards) return parsed;
+  if (parsed.cards && parsed.inbox) return parsed;
+  if (parsed.cards) {
+    return {
+      title: parsed.title || "Kanban Bord",
+      cards: parsed.cards,
+      inbox: []
+    };
+  }
   if (!parsed.columns) return structuredClone(defaultState);
   const cards = parsed.columns.flatMap((column) =>
     column.cards.map((card) => ({
@@ -109,7 +121,8 @@ function migrateState(parsed) {
   );
   return {
     title: parsed.title || "Kanban Bord",
-    cards
+    cards,
+    inbox: []
   };
 }
 
@@ -123,9 +136,13 @@ function saveState() {
 
 function render() {
   board.innerHTML = "";
+  inbox.innerHTML = "";
   boardTitleInput.value = state.title || "Kanban Bord";
+  state.inbox.forEach((card) => {
+    inbox.appendChild(renderTimelineCard(card, "inbox"));
+  });
   state.cards.forEach((card) => {
-    board.appendChild(renderTimelineCard(card));
+    board.appendChild(renderTimelineCard(card, "timeline"));
   });
 
   board.addEventListener("dragover", (event) => {
@@ -141,11 +158,33 @@ function render() {
     event.preventDefault();
     board.classList.remove("drag-over");
     if (!activeDrag) return;
-    reorderCard(activeDrag.cardId, activeDrag.overCardId);
+    if (activeDrag.source === "inbox") {
+      moveFromInboxToTimeline(activeDrag.cardId, activeDrag.overCardId);
+    } else {
+      reorderCard(activeDrag.cardId, activeDrag.overCardId);
+    }
+  });
+
+  inbox.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    inbox.classList.add("drag-over");
+  });
+
+  inbox.addEventListener("dragleave", () => {
+    inbox.classList.remove("drag-over");
+  });
+
+  inbox.addEventListener("drop", (event) => {
+    event.preventDefault();
+    inbox.classList.remove("drag-over");
+    if (!activeDrag) return;
+    if (activeDrag.source === "timeline") {
+      moveFromTimelineToInbox(activeDrag.cardId);
+    }
   });
 }
 
-function renderTimelineCard(card) {
+function renderTimelineCard(card, source) {
   const wrapper = document.createElement("div");
   wrapper.className = "timeline-item";
   wrapper.dataset.cardId = card.id;
@@ -162,7 +201,7 @@ function renderTimelineCard(card) {
   const cardEl = wrapper.querySelector(".card");
   cardEl.addEventListener("dragstart", (event) => {
     cardEl.classList.add("dragging");
-    activeDrag = { cardId: card.id, overCardId: card.id };
+    activeDrag = { cardId: card.id, overCardId: card.id, source };
     event.dataTransfer.effectAllowed = "move";
   });
 
@@ -174,6 +213,10 @@ function renderTimelineCard(card) {
   wrapper.addEventListener("dragenter", () => {
     if (!activeDrag) return;
     activeDrag.overCardId = card.id;
+  });
+
+  cardEl.addEventListener("click", () => {
+    openCardDialog(card);
   });
 
   return wrapper;
@@ -190,9 +233,47 @@ function reorderCard(cardId, overCardId) {
   render();
 }
 
-function openCardDialog() {
+function moveFromInboxToTimeline(cardId, overCardId) {
+  const fromIndex = state.inbox.findIndex((card) => card.id === cardId);
+  if (fromIndex === -1) return;
+  const [card] = state.inbox.splice(fromIndex, 1);
+  if (!overCardId) {
+    state.cards.push(card);
+  } else {
+    const toIndex = state.cards.findIndex((c) => c.id === overCardId);
+    if (toIndex === -1) {
+      state.cards.push(card);
+    } else {
+      state.cards.splice(toIndex, 0, card);
+    }
+  }
+  saveState();
+  render();
+}
+
+function moveFromTimelineToInbox(cardId) {
+  const fromIndex = state.cards.findIndex((card) => card.id === cardId);
+  if (fromIndex === -1) return;
+  const [card] = state.cards.splice(fromIndex, 1);
+  state.inbox.push(card);
+  saveState();
+  render();
+}
+
+function openCardDialog(card) {
   cardForm.reset();
   cardForm.date.value = new Date().toISOString().slice(0, 10);
+  editingCardId = null;
+  cardDialogTitle.textContent = "Nieuw kaartje";
+  cardSubmitBtn.textContent = "Aanmaken";
+  if (card) {
+    cardForm.title.value = card.title || "";
+    cardForm.description.value = card.description || "";
+    cardForm.date.value = card.date || new Date().toISOString().slice(0, 10);
+    editingCardId = card.id;
+    cardDialogTitle.textContent = "Kaartje bewerken";
+    cardSubmitBtn.textContent = "Opslaan";
+  }
   cardDialog.showModal();
 }
 
@@ -266,12 +347,22 @@ cardForm.addEventListener("submit", (event) => {
   const date = formData.get("date").toString().trim();
   if (!title || !description || !date) return;
 
-  state.cards.push({
-    id: createId(),
-    title,
-    description,
-    date
-  });
+  if (editingCardId) {
+    const list = [...state.cards, ...state.inbox];
+    const card = list.find((item) => item.id === editingCardId);
+    if (card) {
+      card.title = title;
+      card.description = description;
+      card.date = date;
+    }
+  } else {
+    state.inbox.push({
+      id: createId(),
+      title,
+      description,
+      date
+    });
+  }
   saveState();
   render();
   cardDialog.close();

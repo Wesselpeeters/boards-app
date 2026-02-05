@@ -259,6 +259,42 @@ body {
   overflow-x: auto;
 }
 
+.inbox {
+  margin-top: 24px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 18px 22px;
+  border: 1px solid #e2e9f5;
+  box-shadow: var(--shadow);
+}
+
+.inbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.inbox-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.inbox-track {
+  margin-top: 14px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 1fr);
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.inbox-track.drag-over {
+  background: rgba(47, 108, 246, 0.05);
+  border-radius: 16px;
+}
+
 .timeline-line {
   position: absolute;
   top: 50%;
@@ -495,6 +531,10 @@ body {
   }
 
   .timeline-track {
+    grid-auto-columns: minmax(220px, 80%);
+  }
+
+  .inbox-track {
     grid-auto-columns: minmax(220px, 80%);
   }
 }

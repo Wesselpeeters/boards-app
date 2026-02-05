@@ -66,6 +66,13 @@
       </section>
 
       <main id="board-screen" class="screen hidden">
+        <section class="inbox">
+          <header class="inbox-header">
+            <h3>Nieuwe kaartjes</h3>
+            <p class="muted">Sleep naar de tijdlijn om te plaatsen.</p>
+          </header>
+          <div id="inbox" class="inbox-track" aria-label="Nieuwe kaartjes"></div>
+        </section>
         <section class="timeline-board">
           <div class="timeline-line"></div>
           <div id="board" class="timeline-track" aria-label="Tijdlijn board"></div>
@@ -75,7 +82,7 @@
 
     <dialog id="card-dialog" class="dialog">
       <form method="dialog" id="card-form">
-        <h2>Nieuw kaartje</h2>
+        <h2 id="card-dialog-title">Nieuw kaartje</h2>
         <label>
           Titel
           <input name="title" type="text" maxlength="60" required />
@@ -90,7 +97,7 @@
         </label>
         <menu class="dialog-actions">
           <button value="cancel" class="btn ghost">Annuleren</button>
-          <button value="confirm" class="btn primary">Aanmaken</button>
+          <button id="card-submit" value="confirm" class="btn primary">Aanmaken</button>
         </menu>
       </form>
     </dialog>
