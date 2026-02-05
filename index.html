@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kanban Bord</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="title-group">
+          <input
+            id="board-title"
+            class="board-title"
+            type="text"
+            value="Kanban Bord"
+            maxlength="60"
+            aria-label="Bordtitel"
+          />
+          <p>Sleep kaartjes, voeg kolommen toe en maak taken aan.</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="add-column" class="btn primary">Kolom toevoegen</button>
+          <button id="open-timeline" class="btn ghost">Tijdlijn</button>
+        </div>
+      </header>
+
+      <section class="auth-panel">
+        <div>
+          <h2>Login</h2>
+          <p class="muted">Test de Supabase auth-flow met een account.</p>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <label>
+            Email
+            <input name="email" type="email" required />
+          </label>
+          <label>
+            Wachtwoord
+            <input name="password" type="password" minlength="6" required />
+          </label>
+          <div class="auth-actions">
+            <button type="button" id="sign-up" class="btn ghost">Account maken</button>
+            <button type="button" id="sign-in" class="btn primary">Inloggen</button>
+          </div>
+          <p id="auth-status" class="muted"></p>
+        </form>
+      </section>
+
+      <main>
+        <div id="board" class="board" aria-label="Kanban board"></div>
+      </main>
+    </div>
+
+    <dialog id="column-dialog" class="dialog">
+      <form method="dialog" id="column-form">
+        <h2>Nieuwe kolom</h2>
+        <label>
+          Kolomtitel
+          <input name="title" type="text" maxlength="40" required />
+        </label>
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn ghost">Annuleren</button>
+          <button value="confirm" class="btn primary">Toevoegen</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="card-dialog" class="dialog">
+      <form method="dialog" id="card-form">
+        <h2>Nieuw kaartje</h2>
+        <label>
+          Titel
+          <input name="title" type="text" maxlength="60" required />
+        </label>
+        <label>
+          Omschrijving
+          <textarea name="description" rows="4" maxlength="280" required></textarea>
+        </label>
+        <label>
+          Datum
+          <input name="date" type="date" required />
+        </label>
+        <input type="hidden" name="columnId" />
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn ghost">Annuleren</button>
+          <button value="confirm" class="btn primary">Aanmaken</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="timeline-dialog" class="dialog timeline-dialog">
+      <form method="dialog">
+        <h2>Tijdlijn</h2>
+        <p class="muted">Alle kaartjes gesorteerd op datum.</p>
+        <div id="timeline" class="timeline"></div>
+        <menu class="dialog-actions">
+          <button value="confirm" class="btn primary">Sluiten</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js" defer></script>
+  </body>
+</html>
