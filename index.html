@@ -48,6 +48,52 @@
         </form>
       </section>
 
+      <section class="board-panel">
+        <div>
+          <h2>Board toegang</h2>
+          <p class="muted">Open een bord met URL-slug en wachtwoord.</p>
+        </div>
+        <form id="board-open-form" class="board-form">
+          <label>
+            Board slug
+            <input name="slug" type="text" placeholder="mijn-bord" required />
+          </label>
+          <label>
+            Wachtwoord
+            <input name="password" type="password" required />
+          </label>
+          <div class="board-actions">
+            <button type="button" id="board-open" class="btn primary">Open bord</button>
+          </div>
+          <p id="board-open-status" class="muted"></p>
+        </form>
+      </section>
+
+      <section class="board-panel">
+        <div>
+          <h2>Nieuw board (master)</h2>
+          <p class="muted">Maak een nieuw bord met unieke slug.</p>
+        </div>
+        <form id="board-create-form" class="board-form">
+          <label>
+            Titel
+            <input name="title" type="text" maxlength="60" required />
+          </label>
+          <label>
+            Board slug
+            <input name="slug" type="text" placeholder="mijn-bord" required />
+          </label>
+          <label>
+            Wachtwoord
+            <input name="password" type="password" minlength="6" required />
+          </label>
+          <div class="board-actions">
+            <button type="button" id="board-create" class="btn ghost">Board maken</button>
+          </div>
+          <p id="board-create-status" class="muted"></p>
+        </form>
+      </section>
+
       <main>
         <div id="board" class="board" aria-label="Kanban board"></div>
       </main>

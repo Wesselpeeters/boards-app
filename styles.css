@@ -57,9 +57,28 @@ body {
   flex-wrap: wrap;
 }
 
+.board-panel {
+  margin-top: 16px;
+  padding: 18px 24px;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e9f5;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
 .auth-panel h2 {
   margin: 0 0 6px;
   font-size: 1.2rem;
+}
+
+.board-panel h2 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
 }
 
 .auth-form {
@@ -69,7 +88,21 @@ body {
   flex: 1;
 }
 
+.board-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 12px;
+  flex: 1;
+}
+
 .auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.board-form label {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -84,7 +117,21 @@ body {
   font-size: 0.95rem;
 }
 
+.board-form input {
+  border-radius: 10px;
+  border: 1px solid #d3ddee;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
 .auth-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+}
+
+.board-actions {
   grid-column: 1 / -1;
   display: flex;
   gap: 12px;
@@ -95,6 +142,11 @@ body {
   margin: 0;
 }
 
+#board-open-status,
+#board-create-status {
+  grid-column: 1 / -1;
+  margin: 0;
+}
 .topbar h1 {
   margin: 0;
   font-size: 2rem;
@@ -420,7 +472,16 @@ body {
     align-items: stretch;
   }
 
+  .board-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .auth-form {
+    grid-template-columns: 1fr;
+  }
+
+  .board-form {
     grid-template-columns: 1fr;
   }
 

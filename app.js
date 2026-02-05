@@ -12,6 +12,12 @@ const authForm = document.getElementById("auth-form");
 const signUpBtn = document.getElementById("sign-up");
 const signInBtn = document.getElementById("sign-in");
 const authStatus = document.getElementById("auth-status");
+const boardOpenForm = document.getElementById("board-open-form");
+const boardOpenBtn = document.getElementById("board-open");
+const boardOpenStatus = document.getElementById("board-open-status");
+const boardCreateForm = document.getElementById("board-create-form");
+const boardCreateBtn = document.getElementById("board-create");
+const boardCreateStatus = document.getElementById("board-create-status");
 
 const supabaseUrl = "https://okmhfegiaonqgfqykuzm.supabase.co";
 const supabaseKey =
@@ -62,6 +68,8 @@ const defaultState = {
 
 let state = loadState();
 let activeDrag = null;
+let currentBoard = null;
+let pendingSave = null;
 
 function createId() {
   return `id-${Math.random().toString(36).slice(2, 9)}-${Date.now()}`;
@@ -80,7 +88,11 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (currentBoard) {
+    scheduleRemoteSave();
+  } else {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
 }
 
 function render() {
@@ -338,5 +350,121 @@ async function handleAuth(action) {
 
 signUpBtn.addEventListener("click", () => handleAuth("signup"));
 signInBtn.addEventListener("click", () => handleAuth("signin"));
+
+async function ensureSignedIn() {
+  const { data } = await supabase.auth.getUser();
+  return data.user;
+}
+
+function getInitialBoardData(title) {
+  return {
+    title,
+    columns: [
+      { id: createId(), title: "Te doen", cards: [] },
+      { id: createId(), title: "Bezig", cards: [] },
+      { id: createId(), title: "Gedaan", cards: [] }
+    ]
+  };
+}
+
+async function createBoard() {
+  const formData = new FormData(boardCreateForm);
+  const title = formData.get("title").toString().trim();
+  const slug = formData.get("slug").toString().trim();
+  const password = formData.get("password").toString().trim();
+  if (!title || !slug || !password) {
+    boardCreateStatus.textContent = "Vul alle velden in.";
+    return;
+  }
+
+  boardCreateStatus.textContent = "Bezig...";
+  const user = await ensureSignedIn();
+  if (!user) {
+    boardCreateStatus.textContent = "Log eerst in met het masteraccount.";
+    return;
+  }
+
+  const boardData = getInitialBoardData(title);
+  const { error } = await supabase.rpc("create_board", {
+    board_title: title,
+    board_slug: slug,
+    board_password: password,
+    board_data: boardData
+  });
+
+  if (error) {
+    boardCreateStatus.textContent = error.message;
+    return;
+  }
+
+  boardCreateStatus.textContent = "Board gemaakt. Je kunt het nu openen.";
+  boardOpenForm.slug.value = slug;
+}
+
+async function openBoard() {
+  const formData = new FormData(boardOpenForm);
+  const slug = formData.get("slug").toString().trim();
+  const password = formData.get("password").toString().trim();
+  if (!slug || !password) {
+    boardOpenStatus.textContent = "Vul een slug en wachtwoord in.";
+    return;
+  }
+
+  boardOpenStatus.textContent = "Bezig...";
+  const { data, error } = await supabase.rpc("get_board", {
+    board_slug: slug,
+    board_password: password
+  });
+
+  if (error) {
+    boardOpenStatus.textContent = error.message;
+    return;
+  }
+
+  if (!data) {
+    boardOpenStatus.textContent = "Board niet gevonden.";
+    return;
+  }
+
+  currentBoard = { slug, password };
+  state = data;
+  saveState();
+  render();
+  boardOpenStatus.textContent = "Board geopend.";
+  const url = new URL(window.location.href);
+  url.searchParams.set("board", slug);
+  window.history.replaceState({}, "", url);
+}
+
+function scheduleRemoteSave() {
+  if (!currentBoard) return;
+  if (pendingSave) {
+    window.clearTimeout(pendingSave);
+  }
+  pendingSave = window.setTimeout(async () => {
+    const { error } = await supabase.rpc("save_board", {
+      board_slug: currentBoard.slug,
+      board_password: currentBoard.password,
+      board_title: state.title,
+      board_data: state
+    });
+    if (error) {
+      boardOpenStatus.textContent = "Opslaan mislukt: " + error.message;
+    }
+  }, 600);
+}
+
+boardCreateBtn.addEventListener("click", createBoard);
+boardOpenBtn.addEventListener("click", openBoard);
+
+function prefillFromUrl() {
+  const url = new URL(window.location.href);
+  const slug = url.searchParams.get("board");
+  if (slug) {
+    boardOpenForm.slug.value = slug;
+  }
+}
+
+prefillFromUrl();
 
 render();
