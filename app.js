@@ -1,7 +1,5 @@
 const board = document.getElementById("board");
-const addColumnBtn = document.getElementById("add-column");
-const columnDialog = document.getElementById("column-dialog");
-const columnForm = document.getElementById("column-form");
+const addCardBtn = document.getElementById("add-card");
 const cardDialog = document.getElementById("card-dialog");
 const cardForm = document.getElementById("card-form");
 const boardTitleInput = document.getElementById("board-title");
@@ -68,28 +66,12 @@ const STORAGE_KEY = "kanban-board-v2";
 
 const defaultState = {
   title: "Kanban Bord",
-  columns: [
+  cards: [
     {
       id: createId(),
-      title: "Te doen",
-      cards: [
-        {
-          id: createId(),
-          title: "Project opstarten",
-          description: "Maak de eerste kolommen en kaartjes aan.",
-          date: new Date().toISOString().slice(0, 10)
-        }
-      ]
-    },
-    {
-      id: createId(),
-      title: "Bezig",
-      cards: []
-    },
-    {
-      id: createId(),
-      title: "Gedaan",
-      cards: []
+      title: "Project opstarten",
+      description: "Maak de eerste kaarten op de tijdlijn.",
+      date: new Date().toISOString().slice(0, 10)
     }
   ]
 };
@@ -109,10 +91,26 @@ function loadState() {
     return structuredClone(defaultState);
   }
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return migrateState(parsed);
   } catch (error) {
     return structuredClone(defaultState);
   }
+}
+
+function migrateState(parsed) {
+  if (parsed.cards) return parsed;
+  if (!parsed.columns) return structuredClone(defaultState);
+  const cards = parsed.columns.flatMap((column) =>
+    column.cards.map((card) => ({
+      ...card,
+      columnTitle: column.title
+    }))
+  );
+  return {
+    title: parsed.title || "Kanban Bord",
+    cards
+  };
 }
 
 function saveState() {
@@ -126,81 +124,45 @@ function saveState() {
 function render() {
   board.innerHTML = "";
   boardTitleInput.value = state.title || "Kanban Bord";
-  state.columns.forEach((column) => {
-    const columnEl = document.createElement("section");
-    columnEl.className = "column";
-    columnEl.dataset.columnId = column.id;
+  state.cards.forEach((card) => {
+    board.appendChild(renderTimelineCard(card));
+  });
 
-    columnEl.innerHTML = `
-      <div class="column-header">
-        <input
-          class="column-title-input"
-          type="text"
-          maxlength="40"
-          value="${escapeHtml(column.title)}"
-          aria-label="Kolomtitel"
-        />
-        <span class="column-count">${column.cards.length}</span>
-      </div>
-      <div class="card-list" aria-label="Kaartjes voor ${escapeHtml(column.title)}"></div>
-      <div class="column-footer">
-        <button class="add-card" type="button">+ Kaartje toevoegen</button>
-      </div>
-    `;
+  board.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    board.classList.add("drag-over");
+  });
 
-    const list = columnEl.querySelector(".card-list");
-    const titleInput = columnEl.querySelector(".column-title-input");
+  board.addEventListener("dragleave", () => {
+    board.classList.remove("drag-over");
+  });
 
-    titleInput.addEventListener("input", () => {
-      const nextTitle = titleInput.value.trim() || "Kolom";
-      column.title = nextTitle;
-      list.setAttribute("aria-label", `Kaartjes voor ${nextTitle}`);
-      saveState();
-    });
-    column.cards.forEach((card) => {
-      list.appendChild(renderCard(card));
-    });
-
-    list.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      list.classList.add("drag-over");
-    });
-
-    list.addEventListener("dragleave", () => {
-      list.classList.remove("drag-over");
-    });
-
-    list.addEventListener("drop", (event) => {
-      event.preventDefault();
-      list.classList.remove("drag-over");
-      if (!activeDrag) return;
-      moveCard(activeDrag.cardId, activeDrag.fromColumnId, column.id);
-    });
-
-    columnEl.querySelector(".add-card").addEventListener("click", () => {
-      openCardDialog(column.id);
-    });
-
-    board.appendChild(columnEl);
+  board.addEventListener("drop", (event) => {
+    event.preventDefault();
+    board.classList.remove("drag-over");
+    if (!activeDrag) return;
+    reorderCard(activeDrag.cardId, activeDrag.overCardId);
   });
 }
 
-function renderCard(card) {
-  const cardEl = document.createElement("article");
-  cardEl.className = "card";
-  cardEl.draggable = true;
-  cardEl.dataset.cardId = card.id;
+function renderTimelineCard(card) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "timeline-item";
+  wrapper.dataset.cardId = card.id;
   const dateLabel = formatDate(card.date);
-  cardEl.innerHTML = `
-    <h4>${escapeHtml(card.title)}</h4>
-    <p>${escapeHtml(card.description)}</p>
-    <span class="card-date">${escapeHtml(dateLabel)}</span>
+  wrapper.innerHTML = `
+    <span class="timeline-marker"></span>
+    <article class="card" draggable="true">
+      <h4>${escapeHtml(card.title)}</h4>
+      <p>${escapeHtml(card.description)}</p>
+      <span class="card-date">${escapeHtml(dateLabel)}</span>
+    </article>
   `;
 
+  const cardEl = wrapper.querySelector(".card");
   cardEl.addEventListener("dragstart", (event) => {
     cardEl.classList.add("dragging");
-    const columnId = cardEl.closest(".column").dataset.columnId;
-    activeDrag = { cardId: card.id, fromColumnId: columnId };
+    activeDrag = { cardId: card.id, overCardId: card.id };
     event.dataTransfer.effectAllowed = "move";
   });
 
@@ -209,29 +171,27 @@ function renderCard(card) {
     activeDrag = null;
   });
 
-  return cardEl;
+  wrapper.addEventListener("dragenter", () => {
+    if (!activeDrag) return;
+    activeDrag.overCardId = card.id;
+  });
+
+  return wrapper;
 }
 
-function moveCard(cardId, fromColumnId, toColumnId) {
-  if (fromColumnId === toColumnId) {
-    return;
-  }
-  const fromColumn = state.columns.find((col) => col.id === fromColumnId);
-  const toColumn = state.columns.find((col) => col.id === toColumnId);
-  if (!fromColumn || !toColumn) return;
-
-  const cardIndex = fromColumn.cards.findIndex((card) => card.id === cardId);
-  if (cardIndex === -1) return;
-
-  const [card] = fromColumn.cards.splice(cardIndex, 1);
-  toColumn.cards.push(card);
+function reorderCard(cardId, overCardId) {
+  if (!cardId || !overCardId || cardId === overCardId) return;
+  const fromIndex = state.cards.findIndex((card) => card.id === cardId);
+  const toIndex = state.cards.findIndex((card) => card.id === overCardId);
+  if (fromIndex === -1 || toIndex === -1) return;
+  const [card] = state.cards.splice(fromIndex, 1);
+  state.cards.splice(toIndex, 0, card);
   saveState();
   render();
 }
 
-function openCardDialog(columnId) {
+function openCardDialog() {
   cardForm.reset();
-  cardForm.columnId.value = columnId;
   cardForm.date.value = new Date().toISOString().slice(0, 10);
   cardDialog.showModal();
 }
@@ -261,15 +221,12 @@ function formatDate(value) {
 }
 
 function renderTimeline() {
-  const items = state.columns.flatMap((column) =>
-    column.cards.map((card) => ({
-      id: card.id,
-      title: card.title,
-      description: card.description,
-      date: card.date,
-      columnTitle: column.title
-    }))
-  );
+  const items = state.cards.map((card) => ({
+    id: card.id,
+    title: card.title,
+    description: card.description,
+    date: card.date
+  }));
 
   items.sort((a, b) => {
     const timeA = new Date(a.date).getTime();
@@ -290,7 +247,6 @@ function renderTimeline() {
       <span class="timeline-marker"></span>
       <div class="timeline-content">
         <h4>${escapeHtml(item.title)}</h4>
-        <p>${escapeHtml(item.columnTitle)}</p>
         <span class="timeline-date">${escapeHtml(formatDate(item.date))}</span>
       </div>
     `;
@@ -298,25 +254,8 @@ function renderTimeline() {
   });
 }
 
-addColumnBtn.addEventListener("click", () => {
-  columnForm.reset();
-  columnDialog.showModal();
-});
-
-columnForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const formData = new FormData(columnForm);
-  const title = formData.get("title").toString().trim();
-  if (!title) return;
-
-  state.columns.push({
-    id: createId(),
-    title,
-    cards: []
-  });
-  saveState();
-  render();
-  columnDialog.close();
+addCardBtn.addEventListener("click", () => {
+  openCardDialog();
 });
 
 cardForm.addEventListener("submit", (event) => {
@@ -325,13 +264,9 @@ cardForm.addEventListener("submit", (event) => {
   const title = formData.get("title").toString().trim();
   const description = formData.get("description").toString().trim();
   const date = formData.get("date").toString().trim();
-  const columnId = formData.get("columnId").toString();
   if (!title || !description || !date) return;
 
-  const column = state.columns.find((col) => col.id === columnId);
-  if (!column) return;
-
-  column.cards.push({
+  state.cards.push({
     id: createId(),
     title,
     description,
@@ -391,11 +326,7 @@ async function ensureSignedIn() {
 function getInitialBoardData(title) {
   return {
     title,
-    columns: [
-      { id: createId(), title: "Te doen", cards: [] },
-      { id: createId(), title: "Bezig", cards: [] },
-      { id: createId(), title: "Gedaan", cards: [] }
-    ]
+    cards: []
   };
 }
 
