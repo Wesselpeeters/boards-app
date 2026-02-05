@@ -356,6 +356,7 @@ body {
   box-shadow: none;
   cursor: grab;
   transition: transform 0.18s ease;
+  width: 180px;
 }
 
 .card:active {
@@ -370,6 +371,8 @@ body {
 .card h4 {
   margin: 0 0 8px;
   font-size: 1rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .card p {
@@ -377,6 +380,8 @@ body {
   font-size: 0.9rem;
   line-height: 1.4;
   color: #4f5f76;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .card .card-date {
