@@ -6,6 +6,7 @@ const cardDialog = document.getElementById("card-dialog");
 const cardForm = document.getElementById("card-form");
 const boardTitleInput = document.getElementById("board-title");
 const boardTopbar = document.getElementById("board-topbar");
+const boardLinkEl = document.getElementById("board-link");
 const openTimelineBtn = document.getElementById("open-timeline");
 const timelineDialog = document.getElementById("timeline-dialog");
 const timelineContainer = document.getElementById("timeline");
@@ -26,6 +27,7 @@ const boardCreateBtn = document.getElementById("board-create");
 const boardCreateStatus = document.getElementById("board-create-status");
 const boardPasswordBtn = document.getElementById("board-password");
 const backToBoardsBtn = document.getElementById("back-to-boards");
+const copyLinkBtn = document.getElementById("copy-link");
 const passwordDialog = document.getElementById("password-dialog");
 const passwordForm = document.getElementById("password-form");
 const passwordSaveBtn = document.getElementById("password-save");
@@ -125,6 +127,7 @@ function saveState() {
 function render() {
   board.innerHTML = "";
   boardTitleInput.value = state.title || "Kanban Bord";
+  updateBoardLink();
   state.columns.forEach((column) => {
     const columnEl = document.createElement("section");
     columnEl.className = "column";
@@ -547,6 +550,20 @@ backToBoardsBtn.addEventListener("click", () => {
   loadBoards();
 });
 
+copyLinkBtn.addEventListener("click", async () => {
+  const url = getBoardUrl();
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    copyLinkBtn.textContent = "Gekopieerd!";
+    window.setTimeout(() => {
+      copyLinkBtn.textContent = "Kopieer link";
+    }, 1500);
+  } catch (error) {
+    boardLinkEl.textContent = url;
+  }
+});
+
 passwordSaveBtn.addEventListener("click", (event) => {
   event.preventDefault();
   updateBoardPassword();
@@ -619,6 +636,22 @@ function showBoardScreen() {
   boardTopbar.classList.remove("hidden");
 }
 
+function getBoardUrl() {
+  if (!currentBoard?.slug) return "";
+  const url = new URL(window.location.href);
+  url.searchParams.set("board", currentBoard.slug);
+  return url.toString();
+}
+
+function updateBoardLink() {
+  const url = getBoardUrl();
+  if (!url) {
+    boardLinkEl.textContent = "";
+    return;
+  }
+  boardLinkEl.textContent = url;
+}
+
 async function initAuth() {
   if (!supabaseClient) return;
   const user = await ensureSignedIn();
@@ -687,6 +720,7 @@ if (!supabaseClient) {
   backToBoardsBtn.disabled = true;
   passwordSaveBtn.disabled = true;
   accessOpenBtn.disabled = true;
+  copyLinkBtn.disabled = true;
 }
 
 render();
