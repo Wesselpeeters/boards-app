@@ -616,10 +616,24 @@ async function loadBoards() {
     const card = document.createElement("div");
     card.className = "board-card";
     card.innerHTML = `
+      <button class="board-delete" type="button">Verwijderen</button>
       <h3>${escapeHtml(boardItem.title)}</h3>
       <p>${escapeHtml(boardItem.slug)}</p>
     `;
     card.addEventListener("click", () => openBoard(boardItem.slug));
+    const deleteBtn = card.querySelector(".board-delete");
+    deleteBtn.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      if (!confirm(`Board "${boardItem.title}" verwijderen?`)) return;
+      const { error: deleteError } = await supabaseClient.rpc("delete_board", {
+        board_slug: boardItem.slug
+      });
+      if (deleteError) {
+        boardsStatus.textContent = deleteError.message;
+        return;
+      }
+      loadBoards();
+    });
     boardsGrid.appendChild(card);
   });
   boardsStatus.textContent = "";

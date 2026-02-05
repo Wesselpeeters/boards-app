@@ -218,3 +218,24 @@ begin
   return found;
 end;
 $$;
+
+create or replace function public.delete_board(
+  board_slug text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  delete from public.boards
+  where slug = board_slug
+    and owner = auth.uid();
+
+  return found;
+end;
+$$;
