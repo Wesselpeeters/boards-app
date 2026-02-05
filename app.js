@@ -22,15 +22,23 @@ const boardCreateStatus = document.getElementById("board-create-status");
 const supabaseUrl = "https://okmhfegiaonqgfqykuzm.supabase.co";
 const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rbWhmZWdpYW9ucWdmcXlrdXptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzkzMTcsImV4cCI6MjA4NTg1NTMxN30.TpugZBoaWNHwN7ekLMXWREQ6o6DcpK7SzGEAvkGSzps";
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase
+  ? window.supabase.createClient(supabaseUrl, supabaseKey)
+  : null;
 
 async function signUp(email, password) {
+  if (!supabase) {
+    return { error: { message: "Supabase is niet geladen." } };
+  }
   const result = await supabase.auth.signUp({ email, password });
   console.log("signUp:", result);
   return result;
 }
 
 async function signIn(email, password) {
+  if (!supabase) {
+    return { error: { message: "Supabase is niet geladen." } };
+  }
   const result = await supabase.auth.signInWithPassword({ email, password });
   console.log("signIn:", result);
   return result;
@@ -352,6 +360,9 @@ signUpBtn.addEventListener("click", () => handleAuth("signup"));
 signInBtn.addEventListener("click", () => handleAuth("signin"));
 
 async function ensureSignedIn() {
+  if (!supabase) {
+    return null;
+  }
   const { data } = await supabase.auth.getUser();
   return data.user;
 }
@@ -368,6 +379,10 @@ function getInitialBoardData(title) {
 }
 
 async function createBoard() {
+  if (!supabase) {
+    boardCreateStatus.textContent = "Supabase is niet geladen.";
+    return;
+  }
   const formData = new FormData(boardCreateForm);
   const title = formData.get("title").toString().trim();
   const slug = formData.get("slug").toString().trim();
@@ -402,6 +417,10 @@ async function createBoard() {
 }
 
 async function openBoard() {
+  if (!supabase) {
+    boardOpenStatus.textContent = "Supabase is niet geladen.";
+    return;
+  }
   const formData = new FormData(boardOpenForm);
   const slug = formData.get("slug").toString().trim();
   const password = formData.get("password").toString().trim();
@@ -438,6 +457,7 @@ async function openBoard() {
 
 function scheduleRemoteSave() {
   if (!currentBoard) return;
+  if (!supabase) return;
   if (pendingSave) {
     window.clearTimeout(pendingSave);
   }
@@ -456,6 +476,14 @@ function scheduleRemoteSave() {
 
 boardCreateBtn.addEventListener("click", createBoard);
 boardOpenBtn.addEventListener("click", openBoard);
+boardCreateForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  createBoard();
+});
+boardOpenForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  openBoard();
+});
 
 function prefillFromUrl() {
   const url = new URL(window.location.href);
@@ -466,5 +494,18 @@ function prefillFromUrl() {
 }
 
 prefillFromUrl();
+
+if (!supabase) {
+  authStatus.textContent =
+    "Supabase kon niet laden. Gebruik een lokale server i.p.v. file://.";
+  boardOpenStatus.textContent =
+    "Supabase is niet beschikbaar.";
+  boardCreateStatus.textContent =
+    "Supabase is niet beschikbaar.";
+  signUpBtn.disabled = true;
+  signInBtn.disabled = true;
+  boardOpenBtn.disabled = true;
+  boardCreateBtn.disabled = true;
+}
 
 render();
