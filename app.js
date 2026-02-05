@@ -482,7 +482,7 @@ async function openBoard(slug) {
   }
 
   currentBoard = { slug, mode: "owner" };
-  state = data;
+  state = migrateState(data || {});
   render();
   showBoardScreen();
   boardsStatus.textContent = "";
@@ -507,7 +507,7 @@ async function openBoardWithPassword(slug, password) {
     return;
   }
   currentBoard = { slug, mode: "public", password };
-  state = data;
+  state = migrateState(data || {});
   render();
   showBoardScreen();
   accessStatus.textContent = "";
