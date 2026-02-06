@@ -198,7 +198,7 @@ function render() {
     }
   });
 
-  updateTimelinePath();
+  scheduleTimelinePathUpdate();
 }
 
 function renderTimelineCard(card, source, index = 0) {
@@ -268,8 +268,25 @@ function updateTimelinePath() {
   timelinePath.innerHTML = `<path d="${d}" />`;
 }
 
+let timelinePathRaf = null;
+function scheduleTimelinePathUpdate() {
+  if (timelinePathRaf) {
+    cancelAnimationFrame(timelinePathRaf);
+  }
+  timelinePathRaf = requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      updateTimelinePath();
+      timelinePathRaf = null;
+    });
+  });
+}
+
 window.addEventListener("resize", () => {
-  updateTimelinePath();
+  scheduleTimelinePathUpdate();
+});
+
+window.addEventListener("load", () => {
+  scheduleTimelinePathUpdate();
 });
 
 function moveFromInboxToTimeline(cardId) {
