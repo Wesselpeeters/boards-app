@@ -178,7 +178,9 @@ function render() {
     if (activeDrag.source === "inbox") {
       moveFromInboxToTimeline(activeDrag.cardId);
     } else if (activeDrag.source === "timeline" && activeDrag.overCardId) {
-      reorderCard(activeDrag.cardId, activeDrag.overCardId);
+      const target = event.target.closest(".timeline-item");
+      const targetId = target?.dataset?.cardId || activeDrag.overCardId;
+      reorderCard(activeDrag.cardId, targetId);
     }
   });
 
@@ -230,6 +232,7 @@ function renderTimelineCard(card, source, index = 0) {
   cardEl.addEventListener("dragstart", (event) => {
     cardEl.classList.add("dragging");
     activeDrag = { cardId: card.id, source, overCardId: card.id };
+    event.dataTransfer.setData("text/plain", card.id);
     event.dataTransfer.effectAllowed = "move";
   });
 
@@ -238,15 +241,17 @@ function renderTimelineCard(card, source, index = 0) {
     activeDrag = null;
   });
 
-  cardEl.addEventListener("dragover", (event) => {
-    event.preventDefault();
-  });
-
   cardEl.addEventListener("click", () => {
     openCardDialog(card);
   });
 
   wrapper.addEventListener("dragenter", () => {
+    if (!activeDrag) return;
+    activeDrag.overCardId = card.id;
+  });
+
+  wrapper.addEventListener("dragover", (event) => {
+    event.preventDefault();
     if (!activeDrag) return;
     activeDrag.overCardId = card.id;
   });
