@@ -1,106 +1,177 @@
 <!doctype html>
 <html lang="nl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Leerflow Planner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;500;700&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">L</div>
-        <div class="brand-text">
-          <div class="brand-title">Leerflow</div>
-          <div class="brand-sub">Planner</div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kanban Bord</title>
+    <link rel="stylesheet" href="styles.css?v=3" />
+  </head>
+  <body>
+    <div class="app">
+      <header id="board-topbar" class="topbar">
+        <div class="title-group">
+          <input
+            id="board-title"
+            class="board-title"
+            type="text"
+            value="Kanban Bord"
+            maxlength="60"
+            aria-label="Bordtitel"
+          />
+          <p>Sleep kaartjes, voeg kolommen toe en maak taken aan.</p>
         </div>
-      </div>
-      <div class="top-actions">
-        <button class="pill ghost">Downloaden</button>
-        <div class="view-toggle">
-          <button class="pill">Start</button>
-          <button class="pill active">Maak</button>
-          <button class="pill">Check</button>
+        <div class="topbar-actions">
+          <button id="copy-link" class="btn ghost">Kopieer link</button>
+          <button id="board-password" class="btn ghost">Wachtwoord</button>
+          <button id="add-card" class="btn primary">Kaartje toevoegen</button>
+          <button id="back-to-boards" class="btn ghost">Terug</button>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <section class="canvas">
-      <div class="canvas-head">
-        <div class="module-info">
-          <div class="module-label editable" data-editable="title">Hoofdonderwerp</div>
-          <div class="module-sub editable" data-editable="subtitle">Deelonderwerp</div>
-        </div>
-        <div class="controls">
-          <label class="input">
-            <span>Aantal weken</span>
-            <input id="weekCount" type="number" min="1" max="12" value="7" />
-          </label>
-          <button id="addWeek" class="pill primary">Week toevoegen</button>
-        </div>
-      </div>
-
-      <div class="weekbar" id="weekbar"></div>
-      <div class="timeline" id="timeline"></div>
-
-      <div class="legend">
-        <div class="legend-item"><span class="dot learn"></span> Leeractiviteiten</div>
-        <div class="legend-item"><span class="dot formative"></span> Formatieve toets</div>
-        <div class="legend-item"><span class="dot summative"></span> Summatieve toets</div>
-        <div class="legend-item"><span class="dot goals"></span> Leerdoelen</div>
-      </div>
-    </section>
-
-    <section class="actions">
-      <div class="actions-head">
+      <section id="login-screen" class="screen auth-panel">
         <div>
-          <div class="actions-title">Acties</div>
-          <div class="actions-sub">Sleep items naar een week</div>
+          <h2>Login</h2>
+          <p class="muted">Log in met je masteraccount.</p>
         </div>
-        <div class="action-hints">
-          <span>Tip: versleep om te ordenen</span>
-        </div>
-      </div>
-      <div class="action-columns" id="actionColumns">
-        <div class="action-column" data-category="learn">
-          <div class="column-title">Leeractiviteiten</div>
-          <div class="action-list" data-source="true"></div>
-          <button class="add-card" data-add-card="learn">+ Toevoegen</button>
-        </div>
-        <div class="action-column" data-category="formative">
-          <div class="column-title">Formatieve toets</div>
-          <div class="action-list" data-source="true"></div>
-          <button class="add-card" data-add-card="formative">+ Toevoegen</button>
-        </div>
-        <div class="action-column" data-category="summative">
-          <div class="column-title">Summatieve toets</div>
-          <div class="action-list" data-source="true"></div>
-          <button class="add-card" data-add-card="summative">+ Toevoegen</button>
-        </div>
-        <div class="action-column" data-category="goals">
-          <div class="column-title">Leerdoelen</div>
-          <div class="action-list" data-source="true"></div>
-          <button class="add-card" data-add-card="goals">+ Toevoegen</button>
-        </div>
-      </div>
-    </section>
-  </div>
+        <form id="auth-form" class="auth-form">
+          <label>
+            Email
+            <input name="email" type="email" required />
+          </label>
+          <label>
+            Wachtwoord
+            <input name="password" type="password" minlength="6" required />
+          </label>
+          <div class="auth-actions">
+            <button type="button" id="sign-up" class="btn ghost">Account maken</button>
+            <button type="button" id="sign-in" class="btn primary">Inloggen</button>
+          </div>
+          <p id="auth-status" class="muted"></p>
+        </form>
+      </section>
 
-  <template id="weekTemplate">
-    <div class="week-column" data-week="">
-      <div class="week-header"></div>
-      <div class="week-body" data-dropzone="true"></div>
+      <section id="boards-screen" class="screen boards-screen hidden">
+        <header class="boards-header">
+          <div>
+            <h2>Jouw borden</h2>
+            <p class="muted">Klik op een bord om te openen.</p>
+          </div>
+          <div class="boards-actions">
+            <button id="open-create-board" class="btn ghost">Nieuw bord</button>
+            <button id="logout" class="btn ghost">Uitloggen</button>
+          </div>
+        </header>
+        <div id="boards-grid" class="boards-grid"></div>
+        <p id="boards-status" class="muted"></p>
+      </section>
+
+      <main id="board-screen" class="screen hidden">
+        <section class="inbox">
+          <header class="inbox-header">
+            <h3>Nieuwe kaartjes</h3>
+            <p class="muted">Sleep naar de tijdlijn om te plaatsen.</p>
+          </header>
+          <div id="inbox" class="inbox-track" aria-label="Nieuwe kaartjes"></div>
+        </section>
+        <section class="timeline-board">
+          <div class="timeline-line"></div>
+          <div id="board" class="timeline-track" aria-label="Tijdlijn board"></div>
+        </section>
+      </main>
     </div>
-  </template>
 
-  <template id="cardTemplate">
-    <div class="action-card" draggable="true" data-category="learn"></div>
-  </template>
+    <dialog id="card-dialog" class="dialog">
+      <form method="dialog" id="card-form">
+        <h2 id="card-dialog-title">Nieuw kaartje</h2>
+        <label>
+          Titel
+          <input name="title" type="text" maxlength="60" required />
+        </label>
+        <label>
+          Omschrijving
+          <textarea name="description" rows="4" maxlength="280" required></textarea>
+        </label>
+        <label>
+          Datum
+          <input name="date" type="date" required />
+        </label>
+        <menu class="dialog-actions">
+          <button type="button" class="btn ghost dialog-cancel">Annuleren</button>
+          <button id="card-submit" value="confirm" class="btn primary">Aanmaken</button>
+        </menu>
+      </form>
+    </dialog>
 
-  <script src="app.js"></script>
-</body>
+    <dialog id="timeline-dialog" class="dialog timeline-dialog">
+      <form method="dialog">
+        <h2>Tijdlijn</h2>
+        <p class="muted">Alle kaartjes gesorteerd op datum.</p>
+        <div id="timeline" class="timeline"></div>
+        <menu class="dialog-actions">
+          <button type="button" class="btn primary dialog-close">Sluiten</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="create-board-dialog" class="dialog">
+      <form method="dialog" id="board-create-form">
+        <h2>Nieuw board</h2>
+        <label>
+          Titel
+          <input name="title" type="text" maxlength="60" required />
+        </label>
+        <label>
+          Board slug
+          <input name="slug" type="text" placeholder="mijn-bord" required />
+        </label>
+        <label>
+          Wachtwoord
+          <input name="password" type="password" minlength="6" required />
+        </label>
+        <p id="board-create-status" class="muted"></p>
+        <menu class="dialog-actions">
+          <button type="button" class="btn ghost dialog-cancel">Annuleren</button>
+          <button id="board-create" value="confirm" class="btn primary">Board maken</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="password-dialog" class="dialog">
+      <form method="dialog" id="password-form">
+        <h2>Wachtwoord instellen</h2>
+        <label>
+          Nieuw wachtwoord
+          <input name="password" type="password" minlength="6" required />
+        </label>
+        <p id="password-status" class="muted"></p>
+        <menu class="dialog-actions">
+          <button type="button" class="btn ghost dialog-cancel">Annuleren</button>
+          <button id="password-save" value="confirm" class="btn primary">
+            Opslaan
+          </button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="access-dialog" class="dialog">
+      <form method="dialog" id="access-form">
+        <h2>Board openen</h2>
+        <p class="muted">Vul het wachtwoord in om dit bord te openen.</p>
+        <label>
+          Wachtwoord
+          <input name="password" type="password" minlength="6" required />
+        </label>
+        <p id="access-status" class="muted"></p>
+        <menu class="dialog-actions">
+          <button type="button" class="btn ghost dialog-cancel">Annuleren</button>
+          <button id="access-open" value="confirm" class="btn primary">
+            Openen
+          </button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js" defer></script>
+  </body>
 </html>
