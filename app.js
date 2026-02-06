@@ -10,6 +10,8 @@ const openTimelineBtn = document.getElementById("open-timeline");
 const timelineDialog = document.getElementById("timeline-dialog");
 const timelineContainer = document.getElementById("timeline");
 const inbox = document.getElementById("inbox");
+const timelineBoard = document.querySelector(".timeline-board");
+const timelinePath = document.getElementById("timeline-path");
 const authForm = document.getElementById("auth-form");
 const signUpBtn = document.getElementById("sign-up");
 const signInBtn = document.getElementById("sign-in");
@@ -195,6 +197,8 @@ function render() {
       moveFromTimelineToInbox(activeDrag.cardId);
     }
   });
+
+  updateTimelinePath();
 }
 
 function renderTimelineCard(card, source, index = 0) {
@@ -236,6 +240,37 @@ function renderTimelineCard(card, source, index = 0) {
 
   return wrapper;
 }
+
+function updateTimelinePath() {
+  if (!timelinePath || !timelineBoard) return;
+  const markers = board.querySelectorAll(".timeline-item .timeline-marker");
+  const boardRect = timelineBoard.getBoundingClientRect();
+  const points = Array.from(markers).map((marker) => {
+    const rect = marker.getBoundingClientRect();
+    return {
+      x: rect.left - boardRect.left + rect.width / 2,
+      y: rect.top - boardRect.top + rect.height / 2
+    };
+  });
+
+  if (points.length === 0) {
+    timelinePath.innerHTML = "";
+    return;
+  }
+
+  const d = points
+    .map((point, index) =>
+      index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
+    )
+    .join(" ");
+
+  timelinePath.setAttribute("viewBox", `0 0 ${boardRect.width} ${boardRect.height}`);
+  timelinePath.innerHTML = `<path d="${d}" />`;
+}
+
+window.addEventListener("resize", () => {
+  updateTimelinePath();
+});
 
 function moveFromInboxToTimeline(cardId) {
   const fromIndex = state.inbox.findIndex((card) => card.id === cardId);
