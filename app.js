@@ -157,8 +157,7 @@ function render() {
   state.inbox.forEach((card) => {
     inbox.appendChild(renderTimelineCard(card, "inbox"));
   });
-  const sortedCards = sortCardsByDate(state.cards);
-  sortedCards.forEach((card, index) => {
+  state.cards.forEach((card, index) => {
     board.appendChild(renderTimelineCard(card, "timeline", index));
   });
 
@@ -213,12 +212,14 @@ function renderTimelineCard(card, source, index = 0) {
     wrapper.style.gridColumn = String(col);
   }
   const dateLabel = formatDate(card.date);
+  const markerColor = card.color || "#9fc3fa";
+  const cardColor = lightenColor(markerColor, 0.22);
   wrapper.innerHTML = `
-    <span class="timeline-marker"></span>
-    <article class="card" draggable="true">
+    <span class="timeline-marker" style="background:${markerColor}"></span>
+    <article class="card" draggable="true" style="background:${cardColor}; border-color:${markerColor}">
       <h4>${escapeHtml(card.title)}</h4>
-      <p>${escapeHtml(card.description)}</p>
-      <span class="card-date">${escapeHtml(dateLabel)}</span>
+      ${card.description ? `<p>${escapeHtml(card.description)}</p>` : ""}
+      ${card.date ? `<span class="card-date">${escapeHtml(dateLabel)}</span>` : ""}
     </article>
   `;
 
@@ -309,14 +310,18 @@ function moveFromTimelineToInbox(cardId) {
 
 function openCardDialog(card) {
   cardForm.reset();
-  cardForm.date.value = new Date().toISOString().slice(0, 10);
+  cardForm.date.value = "";
   editingCardId = null;
   cardDialogTitle.textContent = "Nieuw kaartje";
   cardSubmitBtn.textContent = "Aanmaken";
   if (card) {
     cardForm.title.value = card.title || "";
     cardForm.description.value = card.description || "";
-    cardForm.date.value = card.date || new Date().toISOString().slice(0, 10);
+    cardForm.date.value = card.date || "";
+    if (card.color) {
+      const radio = cardForm.querySelector(`input[name="color"][value="${card.color}"]`);
+      if (radio) radio.checked = true;
+    }
     editingCardId = card.id;
     cardDialogTitle.textContent = "Kaartje bewerken";
     cardSubmitBtn.textContent = "Opslaan";
@@ -324,16 +329,6 @@ function openCardDialog(card) {
   cardDialog.showModal();
 }
 
-function sortCardsByDate(cards) {
-  return [...cards].sort((a, b) => {
-    const timeA = new Date(a.date).getTime();
-    const timeB = new Date(b.date).getTime();
-    if (timeA === timeB) {
-      return (a.title || "").localeCompare(b.title || "");
-    }
-    return timeA - timeB;
-  });
-}
 
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => {
@@ -359,6 +354,15 @@ function formatDate(value) {
   });
 }
 
+function lightenColor(hex, amount) {
+  const safe = hex.replace("#", "");
+  const num = parseInt(safe, 16);
+  const r = Math.min(255, Math.round((num >> 16) + (255 - (num >> 16)) * amount));
+  const g = Math.min(255, Math.round(((num >> 8) & 0xff) + (255 - ((num >> 8) & 0xff)) * amount));
+  const b = Math.min(255, Math.round((num & 0xff) + (255 - (num & 0xff)) * amount));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 function renderTimeline() {
   const items = state.cards.map((card) => ({
     id: card.id,
@@ -366,12 +370,6 @@ function renderTimeline() {
     description: card.description,
     date: card.date
   }));
-
-  items.sort((a, b) => {
-    const timeA = new Date(a.date).getTime();
-    const timeB = new Date(b.date).getTime();
-    return timeA - timeB;
-  });
 
   timelineContainer.innerHTML = "";
   if (items.length === 0) {
@@ -403,7 +401,8 @@ cardForm.addEventListener("submit", (event) => {
   const title = formData.get("title").toString().trim();
   const description = formData.get("description").toString().trim();
   const date = formData.get("date").toString().trim();
-  if (!title || !description || !date) return;
+  const color = formData.get("color").toString().trim() || "#9fc3fa";
+  if (!title) return;
 
   if (editingCardId) {
     const list = [...state.cards, ...state.inbox];
@@ -412,13 +411,15 @@ cardForm.addEventListener("submit", (event) => {
       card.title = title;
       card.description = description;
       card.date = date;
+      card.color = color;
     }
   } else {
     state.inbox.push({
       id: createId(),
       title,
       description,
-      date
+      date,
+      color
     });
   }
   saveState();

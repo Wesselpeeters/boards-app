@@ -371,7 +371,7 @@ body {
   padding: 0;
   margin: 0 0 14px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  grid-template-columns: 1fr;
   gap: 8px;
   font-size: 0.85rem;
 }
@@ -381,10 +381,44 @@ body {
   margin-bottom: 6px;
 }
 
-.color-picker label {
+.color-option {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid #e2e9f5;
+  position: relative;
+}
+
+.color-option:last-child {
+  border-bottom: none;
+}
+
+.color-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #d6deee;
+  position: relative;
+}
+
+.color-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.color-option input:checked + .color-dot::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .card:active {
