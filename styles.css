@@ -366,58 +366,17 @@ body {
   width: 180px;
 }
 
-.color-dropdown {
-  position: relative;
+.color-dots {
+  display: flex;
+  gap: 10px;
   margin-bottom: 14px;
 }
 
-.color-toggle {
+.color-dot-option {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid #d3ddee;
-  background: #ffffff;
   cursor: pointer;
-  font-family: inherit;
-  font-size: 0.9rem;
-}
-
-.color-caret {
-  margin-left: 6px;
-  color: var(--muted);
-}
-
-.color-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  background: #ffffff;
-  border: 1px solid #e2e9f5;
-  border-radius: 16px;
-  padding: 10px 12px;
-  min-width: 200px;
-  display: none;
-  z-index: 10;
-}
-
-.color-menu.open {
-  display: grid;
-}
-
-.color-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #e2e9f5;
   position: relative;
-  cursor: pointer;
-}
-
-.color-option:last-child {
-  border-bottom: none;
 }
 
 .color-dot {
@@ -429,13 +388,13 @@ body {
   position: relative;
 }
 
-.color-option input {
+.color-dot-option input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
 
-.color-option input:checked + .color-dot::after {
+.color-dot-option input:checked + .color-dot::after {
   content: "";
   position: absolute;
   width: 8px;

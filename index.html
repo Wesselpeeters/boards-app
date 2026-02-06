@@ -95,49 +95,35 @@
           Datum
           <input name="date" type="date" />
         </label>
-        <div class="color-dropdown">
-          <button type="button" class="color-toggle" id="color-toggle">
-            <span class="color-dot" id="color-dot" style="background:#8DE0C8"></span>
-            <span id="color-label">Groen</span>
-            <span class="color-caret">▾</span>
-          </button>
-          <div class="color-menu" id="color-menu">
-            <label class="color-option">
-              <input type="radio" name="color" value="#8DE0C8" checked />
-              <span class="color-dot" style="background:#8DE0C8"></span>
-              Groen
-            </label>
-            <label class="color-option">
-              <input type="radio" name="color" value="#faca8e" />
-              <span class="color-dot" style="background:#faca8e"></span>
-              Oranje
-            </label>
-            <label class="color-option">
-              <input type="radio" name="color" value="#9fc3fa" />
-              <span class="color-dot" style="background:#9fc3fa"></span>
-              Blauw
-            </label>
-            <label class="color-option">
-              <input type="radio" name="color" value="#c294f8" />
-              <span class="color-dot" style="background:#c294f8"></span>
-              Paars
-            </label>
-            <label class="color-option">
-              <input type="radio" name="color" value="#fbb7b8" />
-              <span class="color-dot" style="background:#fbb7b8"></span>
-              Rood
-            </label>
-            <label class="color-option">
-              <input type="radio" name="color" value="#ed80ee" />
-              <span class="color-dot" style="background:#ed80ee"></span>
-              Roze
-            </label>
-            <label class="color-option">
-              <input type="radio" name="color" value="#6E6E75" />
-              <span class="color-dot" style="background:#6E6E75"></span>
-              Grijs
-            </label>
-          </div>
+        <div class="color-dots" aria-label="Kleur kiezen">
+          <label class="color-dot-option">
+            <input type="radio" name="color" value="#8DE0C8" checked />
+            <span class="color-dot" style="background:#8DE0C8"></span>
+          </label>
+          <label class="color-dot-option">
+            <input type="radio" name="color" value="#faca8e" />
+            <span class="color-dot" style="background:#faca8e"></span>
+          </label>
+          <label class="color-dot-option">
+            <input type="radio" name="color" value="#9fc3fa" />
+            <span class="color-dot" style="background:#9fc3fa"></span>
+          </label>
+          <label class="color-dot-option">
+            <input type="radio" name="color" value="#c294f8" />
+            <span class="color-dot" style="background:#c294f8"></span>
+          </label>
+          <label class="color-dot-option">
+            <input type="radio" name="color" value="#fbb7b8" />
+            <span class="color-dot" style="background:#fbb7b8"></span>
+          </label>
+          <label class="color-dot-option">
+            <input type="radio" name="color" value="#ed80ee" />
+            <span class="color-dot" style="background:#ed80ee"></span>
+          </label>
+          <label class="color-dot-option">
+            <input type="radio" name="color" value="#6E6E75" />
+            <span class="color-dot" style="background:#6E6E75"></span>
+          </label>
         </div>
         <menu class="dialog-actions">
           <button type="button" class="btn ghost dialog-cancel">Annuleren</button>

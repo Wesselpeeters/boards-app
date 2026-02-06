@@ -4,10 +4,6 @@ const cardDialog = document.getElementById("card-dialog");
 const cardForm = document.getElementById("card-form");
 const cardDialogTitle = document.getElementById("card-dialog-title");
 const cardSubmitBtn = document.getElementById("card-submit");
-const colorToggle = document.getElementById("color-toggle");
-const colorMenu = document.getElementById("color-menu");
-const colorLabel = document.getElementById("color-label");
-const colorDot = document.getElementById("color-dot");
 const colorOptions = cardForm.querySelectorAll("input[name=\"color\"]");
 const boardTitleInput = document.getElementById("board-title");
 const boardTopbar = document.getElementById("board-topbar");
@@ -242,6 +238,10 @@ function renderTimelineCard(card, source, index = 0) {
     activeDrag = null;
   });
 
+  cardEl.addEventListener("dragover", (event) => {
+    event.preventDefault();
+  });
+
   cardEl.addEventListener("click", () => {
     openCardDialog(card);
   });
@@ -337,7 +337,7 @@ function openCardDialog(card) {
   editingCardId = null;
   cardDialogTitle.textContent = "Nieuw kaartje";
   cardSubmitBtn.textContent = "Aanmaken";
-  setColorPicker("#8DE0C8", "Groen");
+  setColorPicker("#8DE0C8");
   if (card) {
     cardForm.title.value = card.title || "";
     cardForm.description.value = card.description || "";
@@ -348,8 +348,7 @@ function openCardDialog(card) {
       );
       if (radio) {
         radio.checked = true;
-        const labelText = radio.closest(".color-option")?.textContent?.trim() || "Kleur";
-        setColorPicker(card.color, labelText);
+        setColorPicker(card.color);
       }
     }
     editingCardId = card.id;
@@ -384,9 +383,9 @@ function formatDate(value) {
   });
 }
 
-function setColorPicker(color, label) {
-  if (colorDot) colorDot.style.background = color;
-  if (colorLabel) colorLabel.textContent = label;
+function setColorPicker(color) {
+  const radio = cardForm.querySelector(`input[name="color"][value="${color}"]`);
+  if (radio) radio.checked = true;
 }
 
 function lightenColor(hex, amount) {
@@ -699,16 +698,8 @@ colorToggle.addEventListener("click", () => {
 
 colorOptions.forEach((option) => {
   option.addEventListener("change", (event) => {
-    const labelText = event.target.closest(".color-option")?.textContent?.trim() || "Kleur";
-    setColorPicker(event.target.value, labelText);
-    colorMenu.classList.remove("open");
+    setColorPicker(event.target.value);
   });
-});
-
-document.addEventListener("click", (event) => {
-  if (!colorMenu.contains(event.target) && !colorToggle.contains(event.target)) {
-    colorMenu.classList.remove("open");
-  }
 });
 
 accessOpenBtn.addEventListener("click", (event) => {
