@@ -366,28 +366,54 @@ body {
   width: 180px;
 }
 
-.color-picker {
-  border: none;
-  padding: 0;
-  margin: 0 0 14px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  font-size: 0.85rem;
+.color-dropdown {
+  position: relative;
+  margin-bottom: 14px;
 }
 
-.color-picker legend {
-  font-weight: 600;
-  margin-bottom: 6px;
+.color-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid #d3ddee;
+  background: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.color-caret {
+  margin-left: 6px;
+  color: var(--muted);
+}
+
+.color-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #e2e9f5;
+  border-radius: 16px;
+  padding: 10px 12px;
+  min-width: 200px;
+  display: none;
+  z-index: 10;
+}
+
+.color-menu.open {
+  display: grid;
 }
 
 .color-option {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px solid #e2e9f5;
   position: relative;
+  cursor: pointer;
 }
 
 .color-option:last-child {

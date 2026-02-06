@@ -4,6 +4,11 @@ const cardDialog = document.getElementById("card-dialog");
 const cardForm = document.getElementById("card-form");
 const cardDialogTitle = document.getElementById("card-dialog-title");
 const cardSubmitBtn = document.getElementById("card-submit");
+const colorToggle = document.getElementById("color-toggle");
+const colorMenu = document.getElementById("color-menu");
+const colorLabel = document.getElementById("color-label");
+const colorDot = document.getElementById("color-dot");
+const colorOptions = cardForm.querySelectorAll("input[name=\"color\"]");
 const boardTitleInput = document.getElementById("board-title");
 const boardTopbar = document.getElementById("board-topbar");
 const openTimelineBtn = document.getElementById("open-timeline");
@@ -176,6 +181,8 @@ function render() {
     if (!activeDrag) return;
     if (activeDrag.source === "inbox") {
       moveFromInboxToTimeline(activeDrag.cardId);
+    } else if (activeDrag.source === "timeline" && activeDrag.overCardId) {
+      reorderCard(activeDrag.cardId, activeDrag.overCardId);
     }
   });
 
@@ -213,7 +220,7 @@ function renderTimelineCard(card, source, index = 0) {
   }
   const dateLabel = formatDate(card.date);
   const markerColor = card.color || "#9fc3fa";
-  const cardColor = lightenColor(markerColor, 0.22);
+  const cardColor = lightenColor(markerColor, 0.5);
   wrapper.innerHTML = `
     <span class="timeline-marker" style="background:${markerColor}"></span>
     <article class="card" draggable="true" style="background:${cardColor}; border-color:${markerColor}">
@@ -226,7 +233,7 @@ function renderTimelineCard(card, source, index = 0) {
   const cardEl = wrapper.querySelector(".card");
   cardEl.addEventListener("dragstart", (event) => {
     cardEl.classList.add("dragging");
-    activeDrag = { cardId: card.id, source };
+    activeDrag = { cardId: card.id, source, overCardId: card.id };
     event.dataTransfer.effectAllowed = "move";
   });
 
@@ -239,7 +246,23 @@ function renderTimelineCard(card, source, index = 0) {
     openCardDialog(card);
   });
 
+  wrapper.addEventListener("dragenter", () => {
+    if (!activeDrag) return;
+    activeDrag.overCardId = card.id;
+  });
+
   return wrapper;
+}
+
+function reorderCard(cardId, overCardId) {
+  if (!cardId || !overCardId || cardId === overCardId) return;
+  const fromIndex = state.cards.findIndex((card) => card.id === cardId);
+  const toIndex = state.cards.findIndex((card) => card.id === overCardId);
+  if (fromIndex === -1 || toIndex === -1) return;
+  const [card] = state.cards.splice(fromIndex, 1);
+  state.cards.splice(toIndex, 0, card);
+  saveState();
+  render();
 }
 
 function updateTimelinePath() {
@@ -314,13 +337,20 @@ function openCardDialog(card) {
   editingCardId = null;
   cardDialogTitle.textContent = "Nieuw kaartje";
   cardSubmitBtn.textContent = "Aanmaken";
+  setColorPicker("#8DE0C8", "Groen");
   if (card) {
     cardForm.title.value = card.title || "";
     cardForm.description.value = card.description || "";
     cardForm.date.value = card.date || "";
     if (card.color) {
-      const radio = cardForm.querySelector(`input[name="color"][value="${card.color}"]`);
-      if (radio) radio.checked = true;
+      const radio = cardForm.querySelector(
+        `input[name="color"][value="${card.color}"]`
+      );
+      if (radio) {
+        radio.checked = true;
+        const labelText = radio.closest(".color-option")?.textContent?.trim() || "Kleur";
+        setColorPicker(card.color, labelText);
+      }
     }
     editingCardId = card.id;
     cardDialogTitle.textContent = "Kaartje bewerken";
@@ -352,6 +382,11 @@ function formatDate(value) {
     month: "short",
     year: "numeric"
   });
+}
+
+function setColorPicker(color, label) {
+  if (colorDot) colorDot.style.background = color;
+  if (colorLabel) colorLabel.textContent = label;
 }
 
 function lightenColor(hex, amount) {
@@ -656,6 +691,24 @@ passwordSaveBtn.addEventListener("click", (event) => {
 passwordForm.addEventListener("submit", (event) => {
   event.preventDefault();
   updateBoardPassword();
+});
+
+colorToggle.addEventListener("click", () => {
+  colorMenu.classList.toggle("open");
+});
+
+colorOptions.forEach((option) => {
+  option.addEventListener("change", (event) => {
+    const labelText = event.target.closest(".color-option")?.textContent?.trim() || "Kleur";
+    setColorPicker(event.target.value, labelText);
+    colorMenu.classList.remove("open");
+  });
+});
+
+document.addEventListener("click", (event) => {
+  if (!colorMenu.contains(event.target) && !colorToggle.contains(event.target)) {
+    colorMenu.classList.remove("open");
+  }
 });
 
 accessOpenBtn.addEventListener("click", (event) => {
