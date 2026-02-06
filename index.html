@@ -89,12 +89,22 @@
         </label>
         <label>
           Omschrijving
-          <textarea name="description" rows="4" maxlength="280" required></textarea>
+          <textarea name="description" rows="4" maxlength="280"></textarea>
         </label>
         <label>
           Datum
-          <input name="date" type="date" required />
+          <input name="date" type="date" />
         </label>
+        <fieldset class="color-picker">
+          <legend>Kleur</legend>
+          <label><input type="radio" name="color" value="#8DE0C8" checked /> Groen</label>
+          <label><input type="radio" name="color" value="#faca8e" /> Oranje</label>
+          <label><input type="radio" name="color" value="#9fc3fa" /> Blauw</label>
+          <label><input type="radio" name="color" value="#c294f8" /> Paars</label>
+          <label><input type="radio" name="color" value="#fbb7b8" /> Rood</label>
+          <label><input type="radio" name="color" value="#ed80ee" /> Roze</label>
+          <label><input type="radio" name="color" value="#6E6E75" /> Grijs</label>
+        </fieldset>
         <menu class="dialog-actions">
           <button type="button" class="btn ghost dialog-cancel">Annuleren</button>
           <button id="card-submit" value="confirm" class="btn primary">Aanmaken</button>
