@@ -312,19 +312,15 @@ body {
 }
 
 .timeline-line {
-  position: absolute;
-  top: 50%;
-  left: 22px;
-  right: 22px;
-  height: 2px;
-  background: #c9d7f2;
+  display: none;
 }
 
 .timeline-track {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(200px, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(5, max-content);
+  grid-auto-rows: minmax(220px, auto);
+  column-gap: 20px;
+  row-gap: 28px;
   position: relative;
   z-index: 1;
   padding: 0 0 10px;
@@ -552,7 +548,7 @@ body {
   }
 
   .timeline-track {
-    grid-auto-columns: minmax(220px, 80%);
+    grid-template-columns: repeat(2, max-content);
   }
 
   .inbox-track {

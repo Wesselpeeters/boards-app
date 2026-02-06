@@ -156,8 +156,8 @@ function render() {
     inbox.appendChild(renderTimelineCard(card, "inbox"));
   });
   const sortedCards = sortCardsByDate(state.cards);
-  sortedCards.forEach((card) => {
-    board.appendChild(renderTimelineCard(card, "timeline"));
+  sortedCards.forEach((card, index) => {
+    board.appendChild(renderTimelineCard(card, "timeline", index));
   });
 
   board.addEventListener("dragover", (event) => {
@@ -197,10 +197,17 @@ function render() {
   });
 }
 
-function renderTimelineCard(card, source) {
+function renderTimelineCard(card, source, index = 0) {
   const wrapper = document.createElement("div");
   wrapper.className = "timeline-item";
   wrapper.dataset.cardId = card.id;
+  if (source === "timeline") {
+    const row = Math.floor(index / 5) + 1;
+    const pos = index % 5;
+    const col = row % 2 === 1 ? pos + 1 : 5 - pos;
+    wrapper.style.gridRow = String(row);
+    wrapper.style.gridColumn = String(col);
+  }
   const dateLabel = formatDate(card.date);
   wrapper.innerHTML = `
     <span class="timeline-marker"></span>
